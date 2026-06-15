@@ -3,7 +3,7 @@ text_spotlight.py — Reading
 
 - Reading text와 Questions는 코드에서 직접 관리
 - 학생은 문장별 태그와 의견을 저장
-- 전체 공유 전에는 본인 태그만 확인
+- 전체 공유 전에는 본인 태그와 하이라이트만 확인
 - 교사는 Teacher Settings에서 전체 공유/숨기기 조절
 - 교사는 전체 학급 버전을 크게 확인 가능
 """
@@ -154,9 +154,6 @@ def get_code_reading_hash():
 
 
 def sync_code_reading_if_needed():
-    """
-    코드에 입력된 본문/질문이 바뀌면 DB에 자동 반영합니다.
-    """
     current_hash = get_code_reading_hash()
     saved_hash = db.get_state("ts_state", "code_reading_hash", "")
 
@@ -228,7 +225,7 @@ def render_student_reading(student_id, sentences, revealed):
 
     if revealed:
         st.success("🔓 Class highlights are now shared.")
-        render_class_shared_view(for_teacher=False)
+        render_class_shared_view(for_teacher=False, show_questions=False)
         return
 
     st.info("전체 공유 전에는 본인이 저장한 태그와 하이라이트만 볼 수 있습니다.")
@@ -438,7 +435,7 @@ def render_comment_box(student, tag, memo):
 # 전체 공유 화면
 # =================================================
 
-def render_class_shared_view(for_teacher=False):
+def render_class_shared_view(for_teacher=False, show_questions=True):
     sync_code_reading_if_needed()
 
     sentences = db.ts_get_sentences()
@@ -459,7 +456,8 @@ def render_class_shared_view(for_teacher=False):
         st.markdown("## 🖥️ Full Class Shared View")
         st.caption("교사용 전체 보기입니다. 학생 공유 여부와 관계없이 교사는 여기서 전체 결과를 확인할 수 있습니다.")
 
-    render_questions(expanded=False)
+    if show_questions:
+        render_questions(expanded=False)
 
     for sent in sentences:
         idx = sent["idx"]
@@ -601,11 +599,14 @@ def render_teacher_controls(revealed):
         "Share를 누르면 전체 학생의 태그와 의견이 함께 공개됩니다."
     )
 
-    with st.expander("Advanced", expanded=False):
-        if st.button("Reset Student Tags Only"):
-            db.ts_reset_all()
-            db.set_state("ts_state", "reveal", "false")
-            st.rerun()
+    st.markdown("---")
+    st.markdown("### Reset")
+
+    if st.button("🗑️ Reset Student Tags Only", width="stretch"):
+        db.ts_reset_all()
+        db.set_state("ts_state", "reveal", "false")
+        st.success("학생들의 태그, 하이라이트, 의견이 모두 삭제되었습니다.")
+        st.rerun()
 
 
 def render_class_results():
@@ -618,4 +619,4 @@ def render_class_results():
     else:
         st.info("현재 학생들은 본인의 태그와 하이라이트만 볼 수 있습니다.")
 
-    render_class_shared_view(for_teacher=True)
+    render_class_shared_view(for_teacher=True, show_questions=True)
