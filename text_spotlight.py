@@ -40,7 +40,7 @@ def split_sentences(text):
 
 
 def render(student_id=""):
-    st.markdown("## 📖 Reading — Text Spotlight")
+    st.markdown("## 📚 Reading — Text Spotlight")
 
     sentences = db.ts_get_sentences()
     revealed = db.get_state("ts_state", "reveal", "false") == "true"
@@ -140,7 +140,7 @@ def save_current_tags(student_id, sentences):
 
 
 def render_hidden_teacher_settings(sentences, revealed):
-    with st.expander("⚙️ Teacher Settings", expanded=False):
+    with st.expander("🔐 Teacher Settings", expanded=False):
         pw = st.text_input(
             "Teacher password",
             type="password",
