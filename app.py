@@ -1,25 +1,22 @@
 """
-app.py — English Reading Lab
-
-- 학생용 기본 화면
-- Home / Word / Reading 메뉴를 버튼형으로 구성
-- 교사용 설정은 왼쪽 아래 Teacher Settings에서 비밀번호로 접근
+app.py — English Reading Class
 """
 
-import os
 import streamlit as st
 import db
 import flip_recall
 import text_spotlight
 
 st.set_page_config(
-    page_title="English Reading Lab",
+    page_title="English Reading Class",
     page_icon="📖",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 db.init_db()
+
+TEACHER_PASSWORD = "daea1234"
 
 
 def apply_style():
@@ -44,34 +41,34 @@ def apply_style():
             color: #D6DCF8 !important;
         }
 
-        .home-top-label {
-            text-align:center;
-            font-size: 14px;
+        div[data-testid="stButton"] > button {
+            border-radius: 12px;
             font-weight: 800;
-            letter-spacing: .14em;
-            text-transform: uppercase;
-            color: #3D5291;
-            margin-top: 8px;
-            margin-bottom: 18px;
+            text-align: left;
         }
 
-        .home-main-title {
-            text-align:center;
-            font-size: 3.3rem;
+        .home-school {
+            text-align: center;
+            font-size: 1.25rem;
             font-weight: 900;
-            color: #1C2340;
-            margin-bottom: 20px;
+            letter-spacing: .18em;
+            color: #FF6B35;
+            text-transform: uppercase;
+            margin-top: 18px;
+            margin-bottom: 8px;
+        }
+
+        .home-title {
+            text-align: center;
+            font-size: 3.6rem;
+            font-weight: 900;
+            color: #0F172A;
+            margin-bottom: 18px;
             line-height: 1.1;
         }
 
-        .home-main-title span {
-            color: #4256A6;
-        }
-
-        div[data-testid="stButton"] > button {
-            border-radius: 12px;
-            font-weight: 700;
-            text-align: left;
+        .home-title span {
+            color: #E63946;
         }
 
         .sidebar-footer {
@@ -131,21 +128,74 @@ with st.sidebar:
     )
 
 
-def find_home_image():
-    possible_paths = [
-        "home_student.png",
-        "home_student.jpg",
-        "home_student.jpeg",
-        "assets/home_student.png",
-        "assets/home_student.jpg",
-        "assets/home_student.jpeg",
-    ]
+def show_home_illustration():
+    st.markdown(
+        """
+        <div style="display:flex; justify-content:center; margin-top: 8px;">
+        <svg width="430" height="360" viewBox="0 0 430 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <ellipse cx="215" cy="330" rx="150" ry="10" fill="#C7CDE8" opacity="0.55"/>
 
-    for path in possible_paths:
-        if os.path.exists(path):
-            return path
+          <path d="M112 218 Q72 245 69 292 Q69 313 88 318 Q105 322 116 306 Q128 285 147 265 Z"
+                fill="#F04E3E"/>
+          <path d="M318 218 Q358 245 361 292 Q361 313 342 318 Q325 322 314 306 Q302 285 283 265 Z"
+                fill="#F04E3E"/>
 
-    return None
+          <path d="M120 205 Q215 165 310 205 L298 315 L132 315 Z" fill="#F04E3E"/>
+          <path d="M146 205 Q215 245 284 205 L270 315 L160 315 Z" fill="#F36A55"/>
+
+          <rect x="193" y="164" width="44" height="42" rx="18" fill="#FFD2A8"/>
+          <circle cx="215" cy="125" r="78" fill="#FFD2A8"/>
+          <circle cx="133" cy="134" r="17" fill="#FFD2A8"/>
+          <circle cx="297" cy="134" r="17" fill="#FFD2A8"/>
+
+          <path d="M137 124
+                   Q130 61 178 37
+                   Q225 12 272 42
+                   Q310 67 303 129
+                   Q292 86 257 70
+                   Q240 108 214 83
+                   Q198 115 169 82
+                   Q149 101 137 124Z"
+                fill="#5A3824"/>
+
+          <path d="M210 42 Q218 20 235 14" stroke="#5A3824" stroke-width="5" stroke-linecap="round"/>
+          <path d="M229 67 Q239 91 259 101" stroke="#3D2418" stroke-width="5" stroke-linecap="round"/>
+          <path d="M196 67 Q207 95 225 105" stroke="#3D2418" stroke-width="5" stroke-linecap="round"/>
+
+          <circle cx="184" cy="130" r="7" fill="#191919"/>
+          <circle cx="246" cy="130" r="7" fill="#191919"/>
+          <path d="M215 139 Q209 150 216 154" stroke="#C7896E" stroke-width="2" stroke-linecap="round"/>
+          <path d="M190 166 Q215 184 240 166" stroke="#8B4D3B" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+          <circle cx="170" cy="154" r="10" fill="#FFB4A3" opacity="0.45"/>
+          <circle cx="260" cy="154" r="10" fill="#FFB4A3" opacity="0.45"/>
+
+          <circle cx="111" cy="260" r="19" fill="#FFD2A8"/>
+          <circle cx="319" cy="260" r="19" fill="#FFD2A8"/>
+
+          <path d="M92 207 L212 246 L212 329 L92 287 Z"
+                fill="#F5C23B" stroke="#3A2A1C" stroke-width="3"/>
+          <path d="M338 207 L212 246 L212 329 L338 287 Z"
+                fill="#F7C845" stroke="#3A2A1C" stroke-width="3"/>
+
+          <path d="M212 246 L212 329" stroke="#9B711D" stroke-width="5"/>
+          <path d="M202 247 L202 327" stroke="#E2A92D" stroke-width="2"/>
+          <path d="M222 247 L222 327" stroke="#E2A92D" stroke-width="2"/>
+
+          <path d="M100 207 L212 242" stroke="white" stroke-width="5"/>
+          <path d="M330 207 L212 242" stroke="white" stroke-width="5"/>
+          <path d="M110 220 L196 247" stroke="#D99F28" stroke-width="2"/>
+          <path d="M320 220 L232 247" stroke="#D99F28" stroke-width="2"/>
+
+          <path d="M98 251 Q116 257 127 272" stroke="#C7896E" stroke-width="3" stroke-linecap="round"/>
+          <path d="M332 251 Q314 257 303 272" stroke="#C7896E" stroke-width="3" stroke-linecap="round"/>
+
+          <line x1="50" y1="326" x2="380" y2="326" stroke="#444" stroke-width="2" opacity="0.5"/>
+        </svg>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def show_home():
@@ -153,25 +203,16 @@ def show_home():
 
     with center:
         st.markdown(
-            '<div class="home-top-label">Daea High School Grade 1 English Class</div>',
+            '<div class="home-school">Daea High School</div>',
             unsafe_allow_html=True,
         )
 
         st.markdown(
-            '<div class="home-main-title">English <span>Reading Lab</span></div>',
+            '<div class="home-title">English <span>Reading Class</span></div>',
             unsafe_allow_html=True,
         )
 
-        image_path = find_home_image()
-
-        if image_path:
-            c1, c2, c3 = st.columns([1.6, 1.8, 1.6])
-            with c2:
-                st.image(image_path, use_container_width=True)
-        else:
-            st.warning(
-                "그림 파일이 없습니다. GitHub 저장소에 home_student.png 파일을 업로드해 주세요."
-            )
+        show_home_illustration()
 
 
 def show_teacher_settings():
@@ -187,7 +228,7 @@ def show_teacher_settings():
         st.info("비밀번호를 입력하면 교사용 설정이 열립니다.")
         return
 
-    if pw != "daea1234":
+    if pw != TEACHER_PASSWORD:
         st.error("비밀번호가 올바르지 않습니다.")
         return
 
@@ -196,7 +237,6 @@ def show_teacher_settings():
     tab1, tab2 = st.tabs(["Word Settings", "Reading Settings"])
 
     with tab1:
-        st.markdown("### Word Settings")
         flip_recall.render_teacher_controls()
 
     with tab2:
