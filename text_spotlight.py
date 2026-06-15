@@ -1,15 +1,85 @@
 """
 text_spotlight.py — Reading
-문장 단위 하이라이트 + 의견 박스 구조
+
+- Reading text와 Questions는 코드에서 직접 관리
+- 학생은 문장별 태그와 의견을 저장
+- 전체 공유 전에는 본인 태그만 확인
+- 교사는 Teacher Settings에서 전체 공유/숨기기 조절
+- 교사는 전체 학급 버전을 크게 확인 가능
 """
 
 import re
+import json
+import hashlib
 import html
 from collections import defaultdict
 
 import streamlit as st
 import db
 
+
+# =================================================
+# Reading 본문과 질문
+# 본문이나 질문을 바꾸고 싶으면 이 부분만 수정하면 됩니다.
+# =================================================
+
+CODE_READING_SECTIONS = [
+    {
+        "heading": "Pictures Worth a Thousand Words",
+        "text": """
+As quickly as a camera captures a scene, an image can grab hold of our emotions.
+Through speech or written text, it can be difficult to convey a complex message quickly.
+Yet photographs can change people’s hearts and minds in an instant.
+And when the magic of photography sparks an emotional reaction in a great number of people, it can change history.
+"""
+    },
+    {
+        "heading": "The Burning River That Started a Movement",
+        "text": """
+In the 1880s, industry began to grow rapidly along the Cuyahoga River in the city of Cleveland.
+This industrial growth provided steady jobs to people in the area.
+Meanwhile, steel mills and factories started dumping large amounts of waste into the river.
+Although the river became polluted, most people simply regarded this as a sign of the area’s economic success.
+"""
+    },
+    {
+        "heading": "",
+        "text": """
+In June 1969, the polluted river caught fire.
+The likely cause was a burning flare falling from a train, which set fire to oil-soaked waste beneath a bridge.
+At that time, few people in Cleveland cared.
+This was because fires had been recorded on the Cuyahoga more than ten times before, and some of them had been much worse.
+However, it wasn’t long before the 1969 fire became famous.
+This was thanks to an article published in Time magazine that year.
+The article featured a shocking photograph of flames and smoke rising from the river.
+But this was not a photograph of the 1969 fire, which was put out so quickly that nobody took a picture of it.
+In fact, it was a picture of a much worse fire that had occurred on the river several years earlier.
+Still, the image had a great impact on people.
+"""
+    },
+    {
+        "heading": "",
+        "text": """
+Around that time, the attitudes of Americans toward environmental problems were starting to change.
+More and more people were becoming aware of the need to protect the environment, and the shocking image of the burning river sparked public anger about water pollution.
+As a result, the Cuyahoga River fire of 1969 became a symbol of pollution.
+A national environmental awareness event was held on April 22, 1970, which later became known as the first Earth Day.
+And in 1972, national water quality standards were established with the passage of the Clean Water Act.
+"""
+    },
+]
+
+CODE_QUESTIONS = [
+    "Q1. How are photographs different from speech or written text according to the passage?",
+    "Q2. Why did few people in Cleveland care when the Cuyahoga River caught fire in 1969?",
+    "Q3. Over to You: How does the image of the burning Cuyahoga River make you feel?",
+    "Q4. Why did 19th-century factory owners in the United States turn to child labor?",
+]
+
+
+# =================================================
+# 태그 카테고리
+# =================================================
 
 TAGS = {
     "글의 주제": {
@@ -18,7 +88,7 @@ TAGS = {
         "border": "#F4A62A",
         "icon": "📍",
     },
-    "날개 문제 근거": {
+    "문제 근거": {
         "color": "#075F4A",
         "bg": "#DFF7EE",
         "border": "#2AA876",
@@ -40,12 +110,13 @@ TAGS = {
 
 NO_TAG = "선택 안 함"
 
-SAMPLE_TEXT = """In the 1880s, industry began to grow rapidly along the Cuyahoga River in the city of Cleveland. This industrial growth provided steady jobs to people in the area. Meanwhile, steel mills and factories started dumping large amounts of waste into the river. Although the river became polluted, most people simply regarded this as a sign of the area’s economic success."""
 
-SAMPLE_QUESTIONS = [
-    "Why did the Cuyahoga River become polluted?",
-    "What did most people think the polluted river showed?",
-]
+# =================================================
+# 기본 유틸 함수
+# =================================================
+
+def safe(text):
+    return html.escape(str(text))
 
 
 def split_sentences(text):
@@ -53,15 +124,72 @@ def split_sentences(text):
     return [s.strip() for s in sentences if s.strip()]
 
 
+def build_reading_data():
+    sentences = []
+    heading_map = {}
+    idx = 0
+
+    for section in CODE_READING_SECTIONS:
+        heading = section.get("heading", "").strip()
+        section_sentences = split_sentences(section.get("text", ""))
+
+        if heading and section_sentences:
+            heading_map[idx] = heading
+
+        for sentence in section_sentences:
+            sentences.append(sentence)
+            idx += 1
+
+    return sentences, heading_map
+
+
+def get_code_reading_hash():
+    data = {
+        "sections": CODE_READING_SECTIONS,
+        "questions": CODE_QUESTIONS,
+    }
+
+    text = json.dumps(data, ensure_ascii=False, sort_keys=True)
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def sync_code_reading_if_needed():
+    """
+    코드에 입력된 본문/질문이 바뀌면 DB에 자동 반영합니다.
+    """
+    current_hash = get_code_reading_hash()
+    saved_hash = db.get_state("ts_state", "code_reading_hash", "")
+
+    current_sentences = db.ts_get_sentences()
+
+    if saved_hash == current_hash and current_sentences:
+        return
+
+    sentences, _ = build_reading_data()
+
+    db.ts_set_text(sentences)
+    db.ts_set_questions(CODE_QUESTIONS)
+    db.set_state("ts_state", "code_reading_hash", current_hash)
+    db.set_state("ts_state", "reveal", "false")
+
+
+def get_tag_info(tag):
+    return TAGS.get(
+        tag,
+        {
+            "color": "#1F2937",
+            "bg": "#FFFFFF",
+            "border": "#E0E8FF",
+            "icon": "",
+        },
+    )
+
+
 def normalize_tag(value):
-    """
-    예전 multiselect 값이 session_state에 list로 남아 있어도
-    새 selectbox 구조에서 오류가 나지 않도록 문자열로 변환.
-    """
     if isinstance(value, list):
         if len(value) == 0:
             return NO_TAG
-        return value[0]
+        value = value[0]
 
     if value in TAGS:
         return value
@@ -69,7 +197,13 @@ def normalize_tag(value):
     return NO_TAG
 
 
+# =================================================
+# 학생 Reading 화면
+# =================================================
+
 def render(student_id=""):
+    sync_code_reading_if_needed()
+
     st.markdown("## 📚 Reading")
 
     sentences = db.ts_get_sentences()
@@ -89,66 +223,70 @@ def render_student_reading(student_id, sentences, revealed):
         st.info("아직 등록된 지문이 없습니다.")
         return
 
-    questions = db.ts_get_questions()
-
-    if questions:
-        with st.expander("📌 Wing Questions", expanded=True):
-            for i, question in enumerate(questions, 1):
-                st.markdown(f"**Q{i}.** {question['text']}")
-
+    render_questions(expanded=True)
     render_tag_legend()
 
     if revealed:
-        st.success("🔓 Class tags are now open. Discuss the results together.")
-        render_class_shared_view()
+        st.success("🔓 Class highlights are now shared.")
+        render_class_shared_view(for_teacher=False)
         return
 
-    if db.ts_is_submitted(student_id):
-        st.success("제출 완료! 선생님이 태그를 공개하면 반 전체 결과를 볼 수 있어요.")
-        render_own_readonly_view(student_id, sentences)
+    st.info("전체 공유 전에는 본인이 저장한 태그와 하이라이트만 볼 수 있습니다.")
+
+    render_student_private_view(student_id, sentences)
+
+
+def render_questions(expanded=True):
+    questions = db.ts_get_questions()
+
+    if not questions:
         return
 
-    st.info("문장을 읽고 카테고리를 선택하면 해당 색상으로 하이라이트됩니다. 의견은 문장 옆 박스에 적으세요.")
+    with st.expander("📌 Questions", expanded=expanded):
+        for question in questions:
+            st.markdown(f"**{question['text']}**")
+
+
+def render_student_private_view(student_id, sentences):
+    _, heading_map = build_reading_data()
+    activity_id = get_code_reading_hash()[:8]
 
     for sent in sentences:
         idx = sent["idx"]
-        sentence_text = sent["text"]
 
-        existing_tags = db.ts_get_student_tags(student_id, idx)
-        existing_tag = existing_tags[0] if existing_tags else NO_TAG
-        existing_memo = db.ts_get_student_memo(student_id, idx)
+        if idx in heading_map:
+            st.markdown(
+                f"""
+                <div style="margin-top:22px; margin-bottom:10px;">
+                    <h2 style="color:#0284C7; font-weight:900;">
+                        {safe(heading_map[idx])}
+                    </h2>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
-        # 예전 session_state와 충돌하지 않도록 key 이름 변경
-        widget_key = f"student_tag_single_{idx}"
-        memo_key = f"student_memo_{idx}"
+        saved_tags = db.ts_get_student_tags(student_id, idx)
+        saved_tag = normalize_tag(saved_tags[0]) if saved_tags else NO_TAG
+        saved_memo = db.ts_get_student_memo(student_id, idx)
 
-        raw_current_tag = st.session_state.get(widget_key, existing_tag)
-        current_tag = normalize_tag(raw_current_tag)
+        tag_key = f"ts_tag_{activity_id}_{student_id}_{idx}"
+        memo_key = f"ts_memo_{activity_id}_{student_id}_{idx}"
 
-        tag_info = TAGS.get(
-            current_tag,
-            {
-                "color": "#1F2937",
-                "bg": "#FFFFFF",
-                "border": "#E0E8FF",
-                "icon": "",
-            },
-        )
+        if tag_key not in st.session_state:
+            st.session_state[tag_key] = saved_tag
+
+        st.session_state[tag_key] = normalize_tag(st.session_state[tag_key])
+
+        if memo_key not in st.session_state:
+            st.session_state[memo_key] = saved_memo
 
         left, right = st.columns([2.4, 1])
-
-        with left:
-            render_sentence_card(
-                sentence_number=idx + 1,
-                sentence=sentence_text,
-                tag_info=tag_info,
-                selected_tag=current_tag,
-            )
 
         with right:
             st.markdown(
                 """
-                <div style="background:white; border:1px solid #E0E8FF; border-radius:14px;
+                <div style="background:white; border:1px solid #BAE6FD; border-radius:14px;
                             padding:12px; margin-bottom:6px;">
                 <b>Your tag & opinion</b>
                 </div>
@@ -156,81 +294,49 @@ def render_student_reading(student_id, sentences, revealed):
                 unsafe_allow_html=True,
             )
 
-            options = [NO_TAG] + list(TAGS.keys())
-            default_index = options.index(current_tag) if current_tag in options else 0
-
-            st.selectbox(
+            selected_tag = st.selectbox(
                 "Category",
-                options,
-                index=default_index,
-                key=widget_key,
+                [NO_TAG] + list(TAGS.keys()),
+                key=tag_key,
                 label_visibility="collapsed",
             )
 
             st.text_area(
                 "Opinion",
-                value=existing_memo,
                 key=memo_key,
                 placeholder="Write your reason, question, or opinion.",
                 height=105,
                 label_visibility="collapsed",
             )
 
+        with left:
+            tag_info = get_tag_info(selected_tag)
+
+            render_sentence_card(
+                sentence_number=idx + 1,
+                sentence=sent["text"],
+                tag_info=tag_info,
+                selected_tag=selected_tag,
+                large=False,
+            )
+
         st.markdown("")
 
-    c1, c2 = st.columns(2)
-
-    if c1.button("Save Draft", width="stretch"):
-        save_current_tags(student_id, sentences)
-        st.success("저장되었습니다. 제출 전이라 수정할 수 있어요.")
-        st.rerun()
-
-    if c2.button("Submit Reading Tags", type="primary", width="stretch"):
-        save_current_tags(student_id, sentences)
-        db.ts_mark_submitted(student_id)
+    if st.button("💾 Save My Tags", type="primary", width="stretch"):
+        save_current_tags(student_id, sentences, activity_id)
+        st.success("저장되었습니다. 전체 공유 전에는 본인에게만 보입니다.")
         st.rerun()
 
 
-def render_sentence_card(sentence_number, sentence, tag_info, selected_tag):
-    safe_sentence = html.escape(sentence)
-
-    if selected_tag == NO_TAG:
-        chip = "<span style='color:#9CA3AF; font-size:12px;'>No highlight yet</span>"
-    else:
-        chip = (
-            f"<span style='background:{tag_info['bg']}; color:{tag_info['color']}; "
-            f"border:1px solid {tag_info['border']}; padding:4px 10px; "
-            f"border-radius:20px; font-size:12px; font-weight:800;'>"
-            f"{tag_info['icon']} {selected_tag}</span>"
-        )
-
-    st.markdown(
-        f"""
-        <div style="background:{tag_info['bg']}; border:2px solid {tag_info['border']};
-                    border-radius:16px; padding:18px 20px; min-height:150px;">
-          <div style="font-size:12px; font-weight:900; color:{tag_info['color']};
-                      margin-bottom:8px;">
-            Sentence {sentence_number}
-          </div>
-          <div style="font-size:20px; line-height:1.75; font-weight:900; color:#111827;">
-            {safe_sentence}
-          </div>
-          <div style="margin-top:12px;">
-            {chip}
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def save_current_tags(student_id, sentences):
+def save_current_tags(student_id, sentences, activity_id):
     for sent in sentences:
         idx = sent["idx"]
-        selected_tag = st.session_state.get(f"student_tag_single_{idx}", NO_TAG)
-        selected_tag = normalize_tag(selected_tag)
 
-        memo = st.session_state.get(f"student_memo_{idx}", "")
+        tag_key = f"ts_tag_{activity_id}_{student_id}_{idx}"
+        memo_key = f"ts_memo_{activity_id}_{student_id}_{idx}"
+
+        selected_tag = normalize_tag(st.session_state.get(tag_key, NO_TAG))
+        memo = st.session_state.get(memo_key, "")
 
         if selected_tag == NO_TAG:
             db.ts_save_tags(student_id, idx, [])
@@ -240,168 +346,39 @@ def save_current_tags(student_id, sentences):
         db.ts_save_memo(student_id, idx, memo)
 
 
-def render_own_readonly_view(student_id, sentences):
-    st.markdown("### Your submitted tags")
+# =================================================
+# 문장 카드 / 태그 / 코멘트 렌더링
+# =================================================
 
-    for sent in sentences:
-        idx = sent["idx"]
-        tags = db.ts_get_student_tags(student_id, idx)
-        memo = db.ts_get_student_memo(student_id, idx)
+def render_sentence_card(sentence_number, sentence, tag_info, selected_tag, large=False):
+    safe_sentence = safe(sentence)
 
-        tag = tags[0] if tags else NO_TAG
-        tag_info = TAGS.get(
-            tag,
-            {
-                "color": "#1F2937",
-                "bg": "#FFFFFF",
-                "border": "#E0E8FF",
-                "icon": "",
-            },
-        )
+    font_size = "22px" if large else "20px"
+    padding = "22px 24px" if large else "18px 20px"
 
-        left, right = st.columns([2.4, 1])
-
-        with left:
-            render_sentence_card(idx + 1, sent["text"], tag_info, tag)
-
-        with right:
-            render_comment_box(student_id, tag, memo)
-
-
-def render_class_shared_view():
-    sentences = db.ts_get_sentences()
-    all_tags = db.ts_get_all_tags()
-    all_memos = db.ts_get_all_memos()
-
-    tag_by_sentence = defaultdict(list)
-    memo_by_sentence = defaultdict(list)
-
-    for tag in all_tags:
-        tag_by_sentence[tag["sentence_idx"]].append(tag)
-
-    for memo in all_memos:
-        memo_by_sentence[memo["sentence_idx"]].append(memo)
-
-    for sent in sentences:
-        idx = sent["idx"]
-
-        dominant_tag = get_dominant_tag(tag_by_sentence[idx])
-        tag_info = TAGS.get(
-            dominant_tag,
-            {
-                "color": "#1F2937",
-                "bg": "#FFFFFF",
-                "border": "#E0E8FF",
-                "icon": "",
-            },
-        )
-
-        left, right = st.columns([2.2, 1.2])
-
-        with left:
-            render_sentence_card(
-                sentence_number=idx + 1,
-                sentence=sent["text"],
-                tag_info=tag_info,
-                selected_tag=dominant_tag,
-            )
-
-            render_sentence_tag_summary(tag_by_sentence[idx])
-
-        with right:
-            st.markdown("**Class opinions**")
-
-            comments = memo_by_sentence[idx]
-
-            if not comments:
-                st.caption("No opinions yet.")
-            else:
-                for memo in comments:
-                    student = memo["student"]
-                    memo_text = memo["memo"]
-                    student_tags = [
-                        t["tag"]
-                        for t in tag_by_sentence[idx]
-                        if t["student"] == student
-                    ]
-                    tag = student_tags[0] if student_tags else NO_TAG
-                    render_comment_box(student, tag, memo_text)
-
-        st.markdown("")
-
-
-def get_dominant_tag(tags):
-    if not tags:
-        return NO_TAG
-
-    counts = defaultdict(int)
-
-    for tag in tags:
-        counts[tag["tag"]] += 1
-
-    return max(counts.items(), key=lambda x: x[1])[0]
-
-
-def render_sentence_tag_summary(tags):
-    counts = defaultdict(int)
-
-    for tag in tags:
-        counts[tag["tag"]] += 1
-
-    if not counts:
-        st.caption("No class tags yet.")
-        return
-
-    chips = ""
-
-    for tag_name, count in sorted(counts.items(), key=lambda x: -x[1]):
-        info = TAGS[tag_name]
-        chips += (
-            f"<span style='background:{info['bg']}; color:{info['color']}; "
-            f"border:1px solid {info['border']}; padding:4px 10px; "
-            f"border-radius:20px; font-size:12px; font-weight:800; margin-right:5px;'>"
-            f"{info['icon']} {tag_name} {count}</span>"
+    if selected_tag == NO_TAG:
+        chip = "<span style='color:#9CA3AF; font-size:12px;'>No highlight yet</span>"
+    else:
+        chip = (
+            f"<span style='background:{tag_info['bg']}; color:{tag_info['color']}; "
+            f"border:1px solid {tag_info['border']}; padding:4px 10px; "
+            f"border-radius:20px; font-size:12px; font-weight:800;'>"
+            f"{tag_info['icon']} {safe(selected_tag)}</span>"
         )
 
     st.markdown(
         f"""
-        <div style="margin-top:8px;">{chips}</div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def render_comment_box(student, tag, memo):
-    safe_student = html.escape(student)
-    safe_memo = html.escape(memo)
-
-    if not safe_memo:
-        safe_memo = "<span style='color:#999;'>No opinion</span>"
-
-    info = TAGS.get(
-        tag,
-        {
-            "color": "#1F2937",
-            "bg": "#FFFFFF",
-            "border": "#E0E8FF",
-            "icon": "",
-        },
-    )
-
-    tag_label = tag if tag != NO_TAG else "No tag"
-
-    st.markdown(
-        f"""
-        <div style="background:{info['bg']}; border:1.5px solid {info['border']};
-                    border-radius:14px; padding:10px 12px; margin-bottom:8px;">
-          <div style="font-size:12px; font-weight:900; color:{info['color']}; margin-bottom:5px;">
-            {info['icon']} {html.escape(tag_label)}
+        <div style="background:{tag_info['bg']}; border:2px solid {tag_info['border']};
+                    border-radius:16px; padding:{padding}; min-height:145px;">
+          <div style="font-size:12px; font-weight:900; color:{tag_info['color']};
+                      margin-bottom:8px;">
+            Sentence {sentence_number}
           </div>
-          <div style="font-size:13px; font-weight:800; color:#111827;">
-            {safe_student}
+          <div style="font-size:{font_size}; line-height:1.75; font-weight:900; color:#111827;">
+            {safe_sentence}
           </div>
-          <div style="font-size:13px; line-height:1.5; color:#374151; margin-top:4px;">
-            {safe_memo}
+          <div style="margin-top:12px;">
+            {chip}
           </div>
         </div>
         """,
@@ -417,7 +394,7 @@ def render_tag_legend():
             f"<span style='background:{info['bg']}; color:{info['color']}; "
             f"border:1px solid {info['border']}; padding:5px 12px; "
             f"border-radius:20px; font-size:13px; font-weight:900; margin-right:6px;'>"
-            f"{info['icon']} {name}</span>"
+            f"{info['icon']} {safe(name)}</span>"
         )
 
     st.markdown(
@@ -428,84 +405,217 @@ def render_tag_legend():
     )
 
 
+def render_comment_box(student, tag, memo):
+    safe_student = safe(student)
+    safe_memo = safe(memo)
+
+    if not safe_memo:
+        safe_memo = "<span style='color:#999;'>No opinion</span>"
+
+    info = get_tag_info(tag)
+    tag_label = tag if tag != NO_TAG else "No tag"
+
+    st.markdown(
+        f"""
+        <div style="background:{info['bg']}; border:1.5px solid {info['border']};
+                    border-radius:14px; padding:10px 12px; margin-bottom:8px;">
+          <div style="font-size:12px; font-weight:900; color:{info['color']}; margin-bottom:5px;">
+            {info['icon']} {safe(tag_label)}
+          </div>
+          <div style="font-size:13px; font-weight:800; color:#111827;">
+            {safe_student}
+          </div>
+          <div style="font-size:13px; line-height:1.5; color:#374151; margin-top:4px;">
+            {safe_memo}
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# =================================================
+# 전체 공유 화면
+# =================================================
+
+def render_class_shared_view(for_teacher=False):
+    sync_code_reading_if_needed()
+
+    sentences = db.ts_get_sentences()
+    all_tags = db.ts_get_all_tags()
+    all_memos = db.ts_get_all_memos()
+    _, heading_map = build_reading_data()
+
+    tag_by_sentence = defaultdict(list)
+    memo_by_sentence = defaultdict(list)
+
+    for tag in all_tags:
+        tag_by_sentence[tag["sentence_idx"]].append(tag)
+
+    for memo in all_memos:
+        memo_by_sentence[memo["sentence_idx"]].append(memo)
+
+    if for_teacher:
+        st.markdown("## 🖥️ Full Class Shared View")
+        st.caption("교사용 전체 보기입니다. 학생 공유 여부와 관계없이 교사는 여기서 전체 결과를 확인할 수 있습니다.")
+
+    render_questions(expanded=False)
+
+    for sent in sentences:
+        idx = sent["idx"]
+
+        if idx in heading_map:
+            st.markdown(
+                f"""
+                <div style="margin-top:26px; margin-bottom:10px;">
+                    <h2 style="color:#0284C7; font-weight:900;">
+                        {safe(heading_map[idx])}
+                    </h2>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        dominant_tag = get_dominant_tag(tag_by_sentence[idx])
+        tag_info = get_tag_info(dominant_tag)
+
+        left, right = st.columns([2.2, 1.2])
+
+        with left:
+            render_sentence_card(
+                sentence_number=idx + 1,
+                sentence=sent["text"],
+                tag_info=tag_info,
+                selected_tag=dominant_tag,
+                large=for_teacher,
+            )
+
+            render_sentence_tag_summary(tag_by_sentence[idx])
+
+        with right:
+            st.markdown("**Class opinions**")
+
+            comments = memo_by_sentence[idx]
+
+            if not comments:
+                st.caption("No opinions yet.")
+            else:
+                for memo in comments:
+                    student = memo["student"]
+                    memo_text = memo["memo"]
+
+                    student_tags = [
+                        t["tag"]
+                        for t in tag_by_sentence[idx]
+                        if t["student"] == student
+                    ]
+
+                    tag = normalize_tag(student_tags[0]) if student_tags else NO_TAG
+                    render_comment_box(student, tag, memo_text)
+
+        st.markdown("")
+
+
+def get_dominant_tag(tags):
+    if not tags:
+        return NO_TAG
+
+    counts = defaultdict(int)
+
+    for tag in tags:
+        normalized = normalize_tag(tag["tag"])
+        if normalized != NO_TAG:
+            counts[normalized] += 1
+
+    if not counts:
+        return NO_TAG
+
+    return max(counts.items(), key=lambda x: x[1])[0]
+
+
+def render_sentence_tag_summary(tags):
+    counts = defaultdict(int)
+
+    for tag in tags:
+        normalized = normalize_tag(tag["tag"])
+        if normalized != NO_TAG:
+            counts[normalized] += 1
+
+    if not counts:
+        st.caption("No class tags yet.")
+        return
+
+    chips = ""
+
+    for tag_name, count in sorted(counts.items(), key=lambda x: -x[1]):
+        info = get_tag_info(tag_name)
+
+        chips += (
+            f"<span style='background:{info['bg']}; color:{info['color']}; "
+            f"border:1px solid {info['border']}; padding:4px 10px; "
+            f"border-radius:20px; font-size:12px; font-weight:800; margin-right:5px;'>"
+            f"{info['icon']} {safe(tag_name)} {count}</span>"
+        )
+
+    st.markdown(
+        f"""
+        <div style="margin-top:8px;">{chips}</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+# =================================================
+# 교사 화면
+# =================================================
+
 def render_teacher_controls(revealed):
-    st.markdown("### ① Add Reading Text")
+    sync_code_reading_if_needed()
 
-    if st.button("Load Sample Text"):
-        st.session_state["ts_text_input"] = SAMPLE_TEXT
-        st.session_state["ts_q_input"] = "\n".join(SAMPLE_QUESTIONS)
-        st.rerun()
+    st.markdown("### Reading Settings")
 
-    text = st.text_area(
-        "Reading text",
-        value=st.session_state.get("ts_text_input", ""),
-        height=180,
-        key="ts_text_input",
-    )
-
-    questions = st.text_area(
-        "Wing questions",
-        value=st.session_state.get("ts_q_input", ""),
-        height=90,
-        key="ts_q_input",
-        help="한 줄에 하나씩 입력하세요.",
-    )
-
-    if st.button("Start New Reading Activity", type="primary"):
-        if not text.strip():
-            st.warning("지문을 입력하세요.")
-        else:
-            sentence_list = split_sentences(text)
-            question_list = [q.strip() for q in questions.splitlines() if q.strip()]
-
-            db.ts_set_text(sentence_list)
-            db.ts_set_questions(question_list)
-            db.set_state("ts_state", "reveal", "false")
-
-            st.success("새 Reading 활동을 시작했습니다.")
-            st.rerun()
-
-    st.markdown("---")
-    st.markdown("### ② Share Control")
-
+    sentences = db.ts_get_sentences()
     participants = db.ts_get_participants()
-    submitted = db.ts_get_submitted_list()
 
     c1, c2, c3 = st.columns(3)
-    c1.metric("Participants", len(participants))
-    c2.metric("Submitted", len(submitted))
-    c3.metric("Writing", len(set(participants) - set(submitted)))
+    c1.metric("Sentences", len(sentences))
+    c2.metric("Participants", len(participants))
+    c3.metric("Sharing", "Open" if revealed else "Hidden")
 
-    if submitted:
-        st.caption("Submitted: " + ", ".join(submitted))
+    st.markdown("---")
+
+    st.markdown("### Share Control")
 
     b1, b2 = st.columns(2)
 
-    if b1.button("🔓 Show Class Tags", type="primary", width="stretch"):
+    if b1.button("🔓 Share Class Highlights", type="primary", width="stretch"):
         db.set_state("ts_state", "reveal", "true")
         st.rerun()
 
-    if b2.button("🔒 Hide Class Tags", width="stretch"):
+    if b2.button("🔒 Hide Class Highlights", width="stretch"):
         db.set_state("ts_state", "reveal", "false")
         st.rerun()
 
-    st.caption("Current status: " + ("Open" if revealed else "Hidden"))
+    st.caption(
+        "공유 전에는 학생들이 본인의 태그와 하이라이트만 볼 수 있습니다. "
+        "Share를 누르면 전체 학생의 태그와 의견이 함께 공개됩니다."
+    )
 
-    st.markdown("---")
-
-    if st.button("Reset Student Tags Only"):
-        db.ts_reset_all()
-        db.set_state("ts_state", "reveal", "false")
-        st.rerun()
+    with st.expander("Advanced", expanded=False):
+        if st.button("Reset Student Tags Only"):
+            db.ts_reset_all()
+            db.set_state("ts_state", "reveal", "false")
+            st.rerun()
 
 
 def render_class_results():
-    all_tags = db.ts_get_all_tags()
-    all_memos = db.ts_get_all_memos()
+    sync_code_reading_if_needed()
 
-    if not all_tags and not all_memos:
-        st.info("아직 학생 태그가 없습니다.")
-        return
+    revealed = db.get_state("ts_state", "reveal", "false") == "true"
 
-    st.markdown("### Heatmap Preview")
-    render_class_shared_view()
+    if revealed:
+        st.success("현재 학생들에게 전체 공유 화면이 공개되어 있습니다.")
+    else:
+        st.info("현재 학생들은 본인의 태그와 하이라이트만 볼 수 있습니다.")
+
+    render_class_shared_view(for_teacher=True)
