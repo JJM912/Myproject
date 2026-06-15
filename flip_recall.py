@@ -1,13 +1,12 @@
 """
 flip_recall.py — Word: Flip & Recall
 
-학생 화면
+학생
 - Class Practice
 - My Words
 
-교사 화면
-- 페이지 하단 Teacher Settings
-- 비밀번호 입력 후 제어
+교사
+- 페이지 맨 아래 Teacher Settings
 """
 
 import streamlit as st
@@ -24,7 +23,7 @@ SAMPLE_WORDS = [
 
 
 def render(student_id=""):
-    st.markdown("## 🗂 Word — Flip & Recall")
+    st.markdown("## ✏️ Word — Flip & Recall")
 
     tab1, tab2 = st.tabs(["Class Practice", "My Words"])
 
@@ -159,7 +158,7 @@ def render_my_words(student_id):
 
 
 def render_hidden_teacher_settings():
-    with st.expander("⚙️ Teacher Settings", expanded=False):
+    with st.expander("🔐 Teacher Settings", expanded=False):
         pw = st.text_input(
             "Teacher password",
             type="password",
