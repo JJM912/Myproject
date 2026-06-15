@@ -2,16 +2,13 @@
 text_spotlight.py — Reading: Text Spotlight
 
 학생
-- 문장별 네 가지 태그 선택
-- 자유 메모 작성
-- 제출 전에는 다른 학생 태그 안 보임
-- 교사가 공개하면 전체 태그와 메모 확인
+- 문장별 태그
+- 메모 작성
+- 제출
+- 교사가 공개하면 전체 결과 보기
 
 교사
-- 지문 등록
-- 날개 문제 등록
-- 전체 태그 공개 / 숨김
-- 학생 제출 현황과 히트맵 확인
+- 하단 Teacher Settings에서 비밀번호 입력 후 접근
 """
 
 import re
@@ -19,6 +16,8 @@ from collections import defaultdict
 
 import streamlit as st
 import db
+
+TEACHER_PASSWORD = "daea1234"
 
 TAGS = {
     "글의 주제": {"color": "#633806", "bg": "#FAEEDA", "icon": "📍"},
@@ -40,16 +39,16 @@ def split_sentences(text):
     return [s.strip() for s in sentences if s.strip()]
 
 
-def render(student_id="", role="Student"):
+def render(student_id=""):
     st.markdown("## 📖 Reading — Text Spotlight")
 
     sentences = db.ts_get_sentences()
     revealed = db.get_state("ts_state", "reveal", "false") == "true"
 
-    if role == "Student":
-        render_student_reading(student_id, sentences, revealed)
-    else:
-        render_teacher_reading(sentences, revealed)
+    render_student_reading(student_id, sentences, revealed)
+
+    st.markdown("---")
+    render_hidden_teacher_settings(sentences, revealed)
 
 
 def render_student_reading(student_id, sentences, revealed):
@@ -60,7 +59,7 @@ def render_student_reading(student_id, sentences, revealed):
         return
 
     if not sentences:
-        st.info("아직 등록된 지문이 없습니다. 선생님이 지문을 등록하면 여기에 나타납니다.")
+        st.info("아직 등록된 지문이 없습니다.")
         return
 
     questions = db.ts_get_questions()
@@ -118,14 +117,14 @@ def render_student_reading(student_id, sentences, revealed):
 
         st.markdown("")
 
-    col1, col2 = st.columns(2)
+    c1, c2 = st.columns(2)
 
-    if col1.button("Save Draft", use_container_width=True):
+    if c1.button("Save Draft", use_container_width=True):
         save_current_tags(student_id, sentences)
-        st.success("저장되었습니다. 아직 제출 전이므로 수정할 수 있어요.")
+        st.success("저장되었습니다. 제출 전이라 수정할 수 있어요.")
         st.rerun()
 
-    if col2.button("Submit Reading Tags", type="primary", use_container_width=True):
+    if c2.button("Submit Reading Tags", type="primary", use_container_width=True):
         save_current_tags(student_id, sentences)
         db.ts_mark_submitted(student_id)
         st.rerun()
@@ -134,32 +133,48 @@ def render_student_reading(student_id, sentences, revealed):
 def save_current_tags(student_id, sentences):
     for sent in sentences:
         idx = sent["idx"]
-
         selected_tags = st.session_state.get(f"student_tag_{idx}", [])
         memo = st.session_state.get(f"student_memo_{idx}", "")
-
         db.ts_save_tags(student_id, idx, selected_tags)
         db.ts_save_memo(student_id, idx, memo)
 
 
-def render_teacher_reading(sentences, revealed):
-    tab1, tab2, tab3 = st.tabs(["Preview", "Teacher Controls", "Class Results"])
+def render_hidden_teacher_settings(sentences, revealed):
+    with st.expander("⚙️ Teacher Settings", expanded=False):
+        pw = st.text_input(
+            "Teacher password",
+            type="password",
+            key="reading_teacher_pw",
+            placeholder="Enter password",
+        )
 
-    with tab1:
-        if not sentences:
-            st.info("아직 등록된 지문이 없습니다.")
-        elif revealed:
-            st.success("현재 학생들에게 히트맵이 공개되어 있습니다.")
-            render_heatmap(show_memos=True)
-        else:
-            st.info("현재 학생들은 개별 태깅 중입니다. 히트맵은 숨겨져 있습니다.")
-            render_text_preview()
+        if not pw:
+            st.caption("교사용 설정은 비밀번호 입력 후 사용할 수 있습니다.")
+            return
 
-    with tab2:
-        render_teacher_controls(revealed)
+        if pw != TEACHER_PASSWORD:
+            st.error("비밀번호가 올바르지 않습니다.")
+            return
 
-    with tab3:
-        render_class_results()
+        st.success("Teacher mode unlocked.")
+
+        tab1, tab2, tab3 = st.tabs(["Preview", "Teacher Controls", "Class Results"])
+
+        with tab1:
+            if not sentences:
+                st.info("아직 등록된 지문이 없습니다.")
+            elif revealed:
+                st.success("현재 학생들에게 히트맵이 공개되어 있습니다.")
+                render_heatmap(show_memos=True)
+            else:
+                st.info("현재 학생들은 개별 태깅 중입니다. 히트맵은 숨겨져 있습니다.")
+                render_text_preview()
+
+        with tab2:
+            render_teacher_controls(revealed)
+
+        with tab3:
+            render_class_results()
 
 
 def render_text_preview():
@@ -168,12 +183,10 @@ def render_text_preview():
 
     if questions:
         st.markdown("### Wing Questions")
-
         for i, question in enumerate(questions, 1):
             st.markdown(f"**Q{i}.** {question['text']}")
 
     st.markdown("### Text")
-
     for sent in sentences:
         st.markdown(f"**{sent['idx'] + 1}.** {sent['text']}")
 
@@ -205,17 +218,11 @@ def render_teacher_controls(revealed):
         if not text.strip():
             st.warning("지문을 입력하세요.")
         else:
-            sentences = split_sentences(text)
-            question_list = [
-                q.strip()
-                for q in questions.splitlines()
-                if q.strip()
-            ]
-
-            db.ts_set_text(sentences)
+            sentence_list = split_sentences(text)
+            question_list = [q.strip() for q in questions.splitlines() if q.strip()]
+            db.ts_set_text(sentence_list)
             db.ts_set_questions(question_list)
             db.set_state("ts_state", "reveal", "false")
-
             st.success("새 Reading 활동을 시작했습니다.")
             st.rerun()
 
@@ -225,22 +232,21 @@ def render_teacher_controls(revealed):
     participants = db.ts_get_participants()
     submitted = db.ts_get_submitted_list()
 
-    col1, col2, col3 = st.columns(3)
-
-    col1.metric("Participants", len(participants))
-    col2.metric("Submitted", len(submitted))
-    col3.metric("Writing", len(set(participants) - set(submitted)))
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Participants", len(participants))
+    c2.metric("Submitted", len(submitted))
+    c3.metric("Writing", len(set(participants) - set(submitted)))
 
     if submitted:
         st.caption("Submitted: " + ", ".join(submitted))
 
-    c1, c2 = st.columns(2)
+    b1, b2 = st.columns(2)
 
-    if c1.button("🔓 Show Class Tags", type="primary", use_container_width=True):
+    if b1.button("🔓 Show Class Tags", type="primary", use_container_width=True):
         db.set_state("ts_state", "reveal", "true")
         st.rerun()
 
-    if c2.button("🔒 Hide Class Tags", use_container_width=True):
+    if b2.button("🔒 Hide Class Tags", use_container_width=True):
         db.set_state("ts_state", "reveal", "false")
         st.rerun()
 
@@ -277,7 +283,6 @@ def render_tag_legend():
         """
         for name, info in TAGS.items()
     )
-
     st.markdown(legend, unsafe_allow_html=True)
     st.markdown("")
 
@@ -315,10 +320,8 @@ def render_heatmap(show_memos=False):
             bar = "#EEEEEE"
 
         chips = ""
-
         for tag_name, count in sorted(tag_counts.items(), key=lambda x: -x[1]):
             info = TAGS.get(tag_name, {"bg": "#eee", "color": "#555", "icon": ""})
-
             chips += (
                 f"<span style='background:{info['bg']}; color:{info['color']}; "
                 f"padding:3px 9px; border-radius:20px; font-size:12px; "
@@ -327,16 +330,13 @@ def render_heatmap(show_memos=False):
             )
 
         memo_html = ""
-
         if show_memos and idx in sent_memos:
             memo_html = "<div style='margin-top:8px;'>"
-
             for memo in sent_memos[idx]:
                 memo_html += (
                     f"<div style='font-size:13px; color:#666; margin-top:4px;'>"
                     f"💬 <b>{memo['student']}</b>: {memo['memo']}</div>"
                 )
-
             memo_html += "</div>"
 
         st.markdown(
@@ -361,12 +361,10 @@ def render_heatmap(show_memos=False):
     st.markdown("### Tag Type Summary")
 
     type_total = defaultdict(int)
-
     for tag in all_tags:
         type_total[tag["tag"]] += 1
 
     cols = st.columns(len(TAGS))
-
     for col, (name, info) in zip(cols, TAGS.items()):
         col.markdown(
             f"""
