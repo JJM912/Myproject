@@ -41,10 +41,25 @@ def apply_style():
             color: #D6DCF8 !important;
         }
 
-        div[data-testid="stButton"] > button {
+        /* 왼쪽 메뉴 버튼 */
+        section[data-testid="stSidebar"] div[data-testid="stButton"] > button {
+            background: #FFFFFF !important;
+            color: #14213D !important;
+            border: 1px solid #DDE5FF !important;
             border-radius: 12px;
-            font-weight: 800;
+            font-weight: 900;
             text-align: left;
+            margin-bottom: 6px;
+        }
+
+        section[data-testid="stSidebar"] div[data-testid="stButton"] > button p {
+            color: #14213D !important;
+            font-weight: 900 !important;
+        }
+
+        section[data-testid="stSidebar"] div[data-testid="stButton"] > button:hover {
+            background: #EAF0FF !important;
+            border: 1px solid #8FA8E8 !important;
         }
 
         .home-school {
@@ -52,7 +67,7 @@ def apply_style():
             font-size: 1.25rem;
             font-weight: 900;
             letter-spacing: .18em;
-            color: #FF6B35;
+            color: #2563EB;
             text-transform: uppercase;
             margin-top: 18px;
             margin-bottom: 8px;
@@ -67,8 +82,8 @@ def apply_style():
             line-height: 1.1;
         }
 
-        .home-title span {
-            color: #E63946;
+        .home-title .blue {
+            color: #2563EB;
         }
 
         .sidebar-footer {
@@ -131,66 +146,142 @@ with st.sidebar:
 def show_home_illustration():
     st.markdown(
         """
-        <div style="display:flex; justify-content:center; margin-top: 8px;">
-        <svg width="430" height="360" viewBox="0 0 430 360" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <ellipse cx="215" cy="330" rx="150" ry="10" fill="#C7CDE8" opacity="0.55"/>
+        <div style="display:flex; justify-content:center; margin-top: 10px;">
+        <svg width="470" height="430" viewBox="0 0 470 430" fill="none" xmlns="http://www.w3.org/2000/svg">
 
-          <path d="M112 218 Q72 245 69 292 Q69 313 88 318 Q105 322 116 306 Q128 285 147 265 Z"
-                fill="#F04E3E"/>
-          <path d="M318 218 Q358 245 361 292 Q361 313 342 318 Q325 322 314 306 Q302 285 283 265 Z"
-                fill="#F04E3E"/>
+          <!-- soft background -->
+          <circle cx="235" cy="215" r="185" fill="#FFFFFF" opacity="0.42"/>
+          <ellipse cx="235" cy="388" rx="150" ry="13" fill="#C9D2F2" opacity="0.45"/>
 
-          <path d="M120 205 Q215 165 310 205 L298 315 L132 315 Z" fill="#F04E3E"/>
-          <path d="M146 205 Q215 245 284 205 L270 315 L160 315 Z" fill="#F36A55"/>
+          <!-- hair -->
+          <path d="M123 142
+                   Q116 78 169 47
+                   Q226 14 291 42
+                   Q340 63 346 126
+                   Q320 92 284 90
+                   Q272 126 235 93
+                   Q220 124 187 88
+                   Q151 96 123 142Z"
+                fill="#CFC7B9" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
 
-          <rect x="193" y="164" width="44" height="42" rx="18" fill="#FFD2A8"/>
-          <circle cx="215" cy="125" r="78" fill="#FFD2A8"/>
-          <circle cx="133" cy="134" r="17" fill="#FFD2A8"/>
-          <circle cx="297" cy="134" r="17" fill="#FFD2A8"/>
+          <!-- hair curls -->
+          <path d="M158 78
+                   C198 42, 228 50, 202 83
+                   C177 115, 224 114, 247 82
+                   C274 45, 303 62, 278 98
+                   C259 126, 302 126, 324 96"
+                stroke="#3D3D3D" stroke-width="7" stroke-linecap="round" fill="none"/>
 
-          <path d="M137 124
-                   Q130 61 178 37
-                   Q225 12 272 42
-                   Q310 67 303 129
-                   Q292 86 257 70
-                   Q240 108 214 83
-                   Q198 115 169 82
-                   Q149 101 137 124Z"
-                fill="#5A3824"/>
+          <!-- ears -->
+          <path d="M119 151
+                   C92 144, 89 188, 117 188"
+                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
+          <path d="M349 151
+                   C376 144, 379 188, 351 188"
+                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
 
-          <path d="M210 42 Q218 20 235 14" stroke="#5A3824" stroke-width="5" stroke-linecap="round"/>
-          <path d="M229 67 Q239 91 259 101" stroke="#3D2418" stroke-width="5" stroke-linecap="round"/>
-          <path d="M196 67 Q207 95 225 105" stroke="#3D2418" stroke-width="5" stroke-linecap="round"/>
+          <!-- face -->
+          <path d="M118 131
+                   C120 77, 165 48, 235 48
+                   C305 48, 350 78, 352 134
+                   C356 237, 291 283, 235 283
+                   C179 283, 114 236, 118 131Z"
+                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
 
-          <circle cx="184" cy="130" r="7" fill="#191919"/>
-          <circle cx="246" cy="130" r="7" fill="#191919"/>
-          <path d="M215 139 Q209 150 216 154" stroke="#C7896E" stroke-width="2" stroke-linecap="round"/>
-          <path d="M190 166 Q215 184 240 166" stroke="#8B4D3B" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <!-- cheeks -->
+          <circle cx="158" cy="190" r="19" fill="#FFB6B6" opacity="0.72"/>
+          <circle cx="313" cy="190" r="19" fill="#FFB6B6" opacity="0.72"/>
 
-          <circle cx="170" cy="154" r="10" fill="#FFB4A3" opacity="0.45"/>
-          <circle cx="260" cy="154" r="10" fill="#FFB4A3" opacity="0.45"/>
+          <!-- eyes -->
+          <circle cx="196" cy="164" r="7" fill="#333333"/>
+          <circle cx="278" cy="164" r="7" fill="#333333"/>
 
-          <circle cx="111" cy="260" r="19" fill="#FFD2A8"/>
-          <circle cx="319" cy="260" r="19" fill="#FFD2A8"/>
+          <!-- nose -->
+          <path d="M236 178
+                   Q230 194 237 201"
+                stroke="#3D3D3D" stroke-width="3" stroke-linecap="round" fill="none"/>
 
-          <path d="M92 207 L212 246 L212 329 L92 287 Z"
-                fill="#F5C23B" stroke="#3A2A1C" stroke-width="3"/>
-          <path d="M338 207 L212 246 L212 329 L338 287 Z"
-                fill="#F7C845" stroke="#3A2A1C" stroke-width="3"/>
+          <!-- smile -->
+          <path d="M168 211
+                   Q235 265 305 211"
+                stroke="#3D3D3D" stroke-width="5" stroke-linecap="round" fill="none"/>
 
-          <path d="M212 246 L212 329" stroke="#9B711D" stroke-width="5"/>
-          <path d="M202 247 L202 327" stroke="#E2A92D" stroke-width="2"/>
-          <path d="M222 247 L222 327" stroke="#E2A92D" stroke-width="2"/>
+          <!-- shirt collar -->
+          <path d="M171 281
+                   L235 319
+                   L299 281
+                   L276 356
+                   L194 356Z"
+                fill="#FFD500" stroke="#3D3D3D" stroke-width="4"/>
 
-          <path d="M100 207 L212 242" stroke="white" stroke-width="5"/>
-          <path d="M330 207 L212 242" stroke="white" stroke-width="5"/>
-          <path d="M110 220 L196 247" stroke="#D99F28" stroke-width="2"/>
-          <path d="M320 220 L232 247" stroke="#D99F28" stroke-width="2"/>
+          <path d="M184 283 L222 314 L205 335"
+                stroke="#3D3D3D" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <path d="M286 283 L248 314 L265 335"
+                stroke="#3D3D3D" stroke-width="4" stroke-linecap="round" fill="none"/>
 
-          <path d="M98 251 Q116 257 127 272" stroke="#C7896E" stroke-width="3" stroke-linecap="round"/>
-          <path d="M332 251 Q314 257 303 272" stroke="#C7896E" stroke-width="3" stroke-linecap="round"/>
+          <!-- buttons -->
+          <circle cx="235" cy="320" r="4" fill="#3D3D3D"/>
+          <circle cx="235" cy="343" r="4" fill="#3D3D3D"/>
 
-          <line x1="50" y1="326" x2="380" y2="326" stroke="#444" stroke-width="2" opacity="0.5"/>
+          <!-- arms -->
+          <path d="M126 293
+                   Q81 318 82 367
+                   Q82 389 104 394
+                   Q128 399 143 377
+                   L161 332Z"
+                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4"/>
+
+          <path d="M344 293
+                   Q389 318 388 367
+                   Q388 389 366 394
+                   Q342 399 327 377
+                   L309 332Z"
+                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4"/>
+
+          <!-- book left -->
+          <path d="M78 266
+                   Q155 262 235 318
+                   L235 408
+                   Q151 342 82 358Z"
+                fill="#FFD500" stroke="#3D3D3D" stroke-width="4" stroke-linejoin="round"/>
+
+          <!-- book right -->
+          <path d="M392 266
+                   Q315 262 235 318
+                   L235 408
+                   Q319 342 388 358Z"
+                fill="#FFD500" stroke="#3D3D3D" stroke-width="4" stroke-linejoin="round"/>
+
+          <!-- book pages -->
+          <path d="M86 254 Q160 249 235 306"
+                stroke="#3D3D3D" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <path d="M384 254 Q310 249 235 306"
+                stroke="#3D3D3D" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <path d="M96 241 Q166 239 235 292"
+                stroke="#3D3D3D" stroke-width="3" stroke-linecap="round" fill="none"/>
+          <path d="M374 241 Q304 239 235 292"
+                stroke="#3D3D3D" stroke-width="3" stroke-linecap="round" fill="none"/>
+
+          <!-- book center fold -->
+          <path d="M235 318 L235 408"
+                stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
+
+          <!-- hands -->
+          <path d="M102 310
+                   Q128 303 138 328
+                   Q144 350 127 367
+                   Q113 379 97 365"
+                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
+          <path d="M368 310
+                   Q342 303 332 328
+                   Q326 350 343 367
+                   Q357 379 373 365"
+                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
+
+          <!-- simple finger lines -->
+          <path d="M113 325 Q127 326 135 340" stroke="#3D3D3D" stroke-width="3" stroke-linecap="round"/>
+          <path d="M357 325 Q343 326 335 340" stroke="#3D3D3D" stroke-width="3" stroke-linecap="round"/>
+
         </svg>
         </div>
         """,
@@ -208,7 +299,7 @@ def show_home():
         )
 
         st.markdown(
-            '<div class="home-title">English <span>Reading Class</span></div>',
+            '<div class="home-title">English <span class="blue">Reading Class</span></div>',
             unsafe_allow_html=True,
         )
 
