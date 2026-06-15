@@ -1,12 +1,32 @@
 """
 app.py — English Reading Class
+
+홈 화면:
+- Daea High School
+- English Reading Class
+- home_student.png 그림 표시
+
+왼쪽 메뉴:
+- Home
+- Word
+- Reading
+- Teacher Settings
+
+교사 설정:
+- 왼쪽 Teacher Settings에서 한 번에 관리
 """
 
+import os
 import streamlit as st
+
 import db
 import flip_recall
 import text_spotlight
 
+
+# -------------------------------------------------
+# 기본 설정
+# -------------------------------------------------
 st.set_page_config(
     page_title="English Reading Class",
     page_icon="📖",
@@ -19,6 +39,9 @@ db.init_db()
 TEACHER_PASSWORD = "daea1234"
 
 
+# -------------------------------------------------
+# CSS 스타일
+# -------------------------------------------------
 def apply_style():
     st.markdown(
         """
@@ -33,6 +56,7 @@ def apply_style():
             background: #F0F4FF;
         }
 
+        /* 왼쪽 사이드바 배경 */
         section[data-testid="stSidebar"] {
             background: #1C2340;
         }
@@ -62,6 +86,7 @@ def apply_style():
             border: 1px solid #8FA8E8 !important;
         }
 
+        /* 홈 화면 학교명 */
         .home-school {
             text-align: center;
             font-size: 1.25rem;
@@ -73,6 +98,7 @@ def apply_style():
             margin-bottom: 8px;
         }
 
+        /* 홈 화면 제목 */
         .home-title {
             text-align: center;
             font-size: 3.6rem;
@@ -99,6 +125,10 @@ def apply_style():
 
 apply_style()
 
+
+# -------------------------------------------------
+# 세션 상태
+# -------------------------------------------------
 if "student_id" not in st.session_state:
     st.session_state["student_id"] = ""
 
@@ -111,6 +141,9 @@ def go_page(page_name):
     st.rerun()
 
 
+# -------------------------------------------------
+# 사이드바
+# -------------------------------------------------
 with st.sidebar:
     st.markdown("## 📚 English Reading Lab")
 
@@ -119,6 +152,7 @@ with st.sidebar:
         value=st.session_state.get("student_id", ""),
         placeholder="예: 10101",
     )
+
     st.session_state["student_id"] = student_id.strip()
 
     st.markdown("---")
@@ -143,152 +177,27 @@ with st.sidebar:
     )
 
 
+# -------------------------------------------------
+# 홈 화면 그림
+# -------------------------------------------------
 def show_home_illustration():
-    st.markdown(
-        """
-        <div style="display:flex; justify-content:center; margin-top: 10px;">
-        <svg width="470" height="430" viewBox="0 0 470 430" fill="none" xmlns="http://www.w3.org/2000/svg">
+    image_path = "home_student.png"
 
-          <!-- soft background -->
-          <circle cx="235" cy="215" r="185" fill="#FFFFFF" opacity="0.42"/>
-          <ellipse cx="235" cy="388" rx="150" ry="13" fill="#C9D2F2" opacity="0.45"/>
+    if os.path.exists(image_path):
+        c1, c2, c3 = st.columns([1.4, 1.7, 1.4])
 
-          <!-- hair -->
-          <path d="M123 142
-                   Q116 78 169 47
-                   Q226 14 291 42
-                   Q340 63 346 126
-                   Q320 92 284 90
-                   Q272 126 235 93
-                   Q220 124 187 88
-                   Q151 96 123 142Z"
-                fill="#CFC7B9" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
-
-          <!-- hair curls -->
-          <path d="M158 78
-                   C198 42, 228 50, 202 83
-                   C177 115, 224 114, 247 82
-                   C274 45, 303 62, 278 98
-                   C259 126, 302 126, 324 96"
-                stroke="#3D3D3D" stroke-width="7" stroke-linecap="round" fill="none"/>
-
-          <!-- ears -->
-          <path d="M119 151
-                   C92 144, 89 188, 117 188"
-                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
-          <path d="M349 151
-                   C376 144, 379 188, 351 188"
-                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
-
-          <!-- face -->
-          <path d="M118 131
-                   C120 77, 165 48, 235 48
-                   C305 48, 350 78, 352 134
-                   C356 237, 291 283, 235 283
-                   C179 283, 114 236, 118 131Z"
-                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
-
-          <!-- cheeks -->
-          <circle cx="158" cy="190" r="19" fill="#FFB6B6" opacity="0.72"/>
-          <circle cx="313" cy="190" r="19" fill="#FFB6B6" opacity="0.72"/>
-
-          <!-- eyes -->
-          <circle cx="196" cy="164" r="7" fill="#333333"/>
-          <circle cx="278" cy="164" r="7" fill="#333333"/>
-
-          <!-- nose -->
-          <path d="M236 178
-                   Q230 194 237 201"
-                stroke="#3D3D3D" stroke-width="3" stroke-linecap="round" fill="none"/>
-
-          <!-- smile -->
-          <path d="M168 211
-                   Q235 265 305 211"
-                stroke="#3D3D3D" stroke-width="5" stroke-linecap="round" fill="none"/>
-
-          <!-- shirt collar -->
-          <path d="M171 281
-                   L235 319
-                   L299 281
-                   L276 356
-                   L194 356Z"
-                fill="#FFD500" stroke="#3D3D3D" stroke-width="4"/>
-
-          <path d="M184 283 L222 314 L205 335"
-                stroke="#3D3D3D" stroke-width="4" stroke-linecap="round" fill="none"/>
-          <path d="M286 283 L248 314 L265 335"
-                stroke="#3D3D3D" stroke-width="4" stroke-linecap="round" fill="none"/>
-
-          <!-- buttons -->
-          <circle cx="235" cy="320" r="4" fill="#3D3D3D"/>
-          <circle cx="235" cy="343" r="4" fill="#3D3D3D"/>
-
-          <!-- arms -->
-          <path d="M126 293
-                   Q81 318 82 367
-                   Q82 389 104 394
-                   Q128 399 143 377
-                   L161 332Z"
-                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4"/>
-
-          <path d="M344 293
-                   Q389 318 388 367
-                   Q388 389 366 394
-                   Q342 399 327 377
-                   L309 332Z"
-                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4"/>
-
-          <!-- book left -->
-          <path d="M78 266
-                   Q155 262 235 318
-                   L235 408
-                   Q151 342 82 358Z"
-                fill="#FFD500" stroke="#3D3D3D" stroke-width="4" stroke-linejoin="round"/>
-
-          <!-- book right -->
-          <path d="M392 266
-                   Q315 262 235 318
-                   L235 408
-                   Q319 342 388 358Z"
-                fill="#FFD500" stroke="#3D3D3D" stroke-width="4" stroke-linejoin="round"/>
-
-          <!-- book pages -->
-          <path d="M86 254 Q160 249 235 306"
-                stroke="#3D3D3D" stroke-width="4" stroke-linecap="round" fill="none"/>
-          <path d="M384 254 Q310 249 235 306"
-                stroke="#3D3D3D" stroke-width="4" stroke-linecap="round" fill="none"/>
-          <path d="M96 241 Q166 239 235 292"
-                stroke="#3D3D3D" stroke-width="3" stroke-linecap="round" fill="none"/>
-          <path d="M374 241 Q304 239 235 292"
-                stroke="#3D3D3D" stroke-width="3" stroke-linecap="round" fill="none"/>
-
-          <!-- book center fold -->
-          <path d="M235 318 L235 408"
-                stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
-
-          <!-- hands -->
-          <path d="M102 310
-                   Q128 303 138 328
-                   Q144 350 127 367
-                   Q113 379 97 365"
-                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
-          <path d="M368 310
-                   Q342 303 332 328
-                   Q326 350 343 367
-                   Q357 379 373 365"
-                fill="#FFFFFF" stroke="#3D3D3D" stroke-width="4" stroke-linecap="round"/>
-
-          <!-- simple finger lines -->
-          <path d="M113 325 Q127 326 135 340" stroke="#3D3D3D" stroke-width="3" stroke-linecap="round"/>
-          <path d="M357 325 Q343 326 335 340" stroke="#3D3D3D" stroke-width="3" stroke-linecap="round"/>
-
-        </svg>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+        with c2:
+            st.image(image_path, use_container_width=True)
+    else:
+        st.warning(
+            "home_student.png 파일이 없습니다. "
+            "GitHub 저장소에서 app.py와 같은 위치에 home_student.png를 업로드해 주세요."
+        )
 
 
+# -------------------------------------------------
+# 홈 화면
+# -------------------------------------------------
 def show_home():
     _, center, _ = st.columns([1, 3, 1])
 
@@ -306,6 +215,9 @@ def show_home():
         show_home_illustration()
 
 
+# -------------------------------------------------
+# 교사 설정 화면
+# -------------------------------------------------
 def show_teacher_settings():
     st.markdown("## 🔐 Teacher Settings")
 
@@ -332,7 +244,9 @@ def show_teacher_settings():
 
     with tab2:
         st.markdown("### Reading Settings")
+
         revealed = db.get_state("ts_state", "reveal", "false") == "true"
+
         text_spotlight.render_teacher_controls(revealed)
 
         st.markdown("---")
@@ -340,6 +254,9 @@ def show_teacher_settings():
         text_spotlight.render_class_results()
 
 
+# -------------------------------------------------
+# 페이지 라우팅
+# -------------------------------------------------
 if st.session_state["page"] == "Home":
     show_home()
 
