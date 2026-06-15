@@ -1,16 +1,5 @@
 """
 db.py — SQLite 기반 공유 데이터 관리
-
-기능
-1. Word
-   - 교사 단어 등록
-   - 학생 I Know It / Save to My Words 응답 저장
-   - 학번별 My Words 저장
-
-2. Reading
-   - 지문과 날개 문제 저장
-   - 학생 태그와 메모 저장
-   - 교사 공개 여부 저장
 """
 
 import sqlite3
@@ -35,7 +24,6 @@ def init_db():
     with get_conn() as conn:
         c = conn.cursor()
 
-        # 앱 전체 상태
         c.execute("""
             CREATE TABLE IF NOT EXISTS app_state (
                 key TEXT PRIMARY KEY,
@@ -43,7 +31,6 @@ def init_db():
             )
         """)
 
-        # Word 단어
         c.execute("""
             CREATE TABLE IF NOT EXISTS flip_words (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +40,6 @@ def init_db():
             )
         """)
 
-        # Word 진행 상태
         c.execute("""
             CREATE TABLE IF NOT EXISTS flip_state (
                 key TEXT PRIMARY KEY,
@@ -61,9 +47,6 @@ def init_db():
             )
         """)
 
-        # Word 학생 응답
-        # 기존 Claude 코드와 호환되도록 컬럼명을 rating으로 유지
-        # 값은 know / save 사용
         c.execute("""
             CREATE TABLE IF NOT EXISTS flip_responses (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,7 +57,6 @@ def init_db():
             )
         """)
 
-        # 학번별 개인 단어장
         c.execute("""
             CREATE TABLE IF NOT EXISTS my_words (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -87,7 +69,6 @@ def init_db():
             )
         """)
 
-        # Reading 지문 문장
         c.execute("""
             CREATE TABLE IF NOT EXISTS ts_sentences (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -96,7 +77,6 @@ def init_db():
             )
         """)
 
-        # Reading 날개 문제
         c.execute("""
             CREATE TABLE IF NOT EXISTS ts_questions (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -105,7 +85,6 @@ def init_db():
             )
         """)
 
-        # Reading 태그
         c.execute("""
             CREATE TABLE IF NOT EXISTS ts_tags (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -116,7 +95,6 @@ def init_db():
             )
         """)
 
-        # Reading 메모
         c.execute("""
             CREATE TABLE IF NOT EXISTS ts_memos (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -127,14 +105,12 @@ def init_db():
             )
         """)
 
-        # Reading 제출 완료 학생
         c.execute("""
             CREATE TABLE IF NOT EXISTS ts_submitted (
                 student TEXT PRIMARY KEY
             )
         """)
 
-        # Reading 공개 여부
         c.execute("""
             CREATE TABLE IF NOT EXISTS ts_state (
                 key TEXT PRIMARY KEY,
@@ -143,9 +119,6 @@ def init_db():
         """)
 
 
-# -----------------------------
-# 상태 관리
-# -----------------------------
 def set_state(table, key, value):
     with get_conn() as conn:
         conn.execute(
@@ -167,17 +140,6 @@ def get_state(table, key, default=None):
         return row["value"] if row else default
 
 
-def set_app_state(key, value):
-    set_state("app_state", key, value)
-
-
-def get_app_state(key, default=None):
-    return get_state("app_state", key, default)
-
-
-# -----------------------------
-# Word: Flip & Recall
-# -----------------------------
 def flip_add_word(word, meaning, example=""):
     with get_conn() as conn:
         conn.execute(
@@ -188,9 +150,7 @@ def flip_add_word(word, meaning, example=""):
 
 def flip_get_words():
     with get_conn() as conn:
-        rows = conn.execute(
-            "SELECT * FROM flip_words ORDER BY id"
-        ).fetchall()
+        rows = conn.execute("SELECT * FROM flip_words ORDER BY id").fetchall()
         return [dict(r) for r in rows]
 
 
@@ -209,11 +169,6 @@ def flip_clear_words():
 
 
 def flip_save_response(student, word_id, response):
-    """
-    response 값:
-    - know
-    - save
-    """
     with get_conn() as conn:
         conn.execute(
             """
@@ -229,9 +184,7 @@ def flip_save_response(student, word_id, response):
 def flip_get_responses(word_id=None):
     with get_conn() as conn:
         if word_id is None:
-            rows = conn.execute(
-                "SELECT * FROM flip_responses"
-            ).fetchall()
+            rows = conn.execute("SELECT * FROM flip_responses").fetchall()
         else:
             rows = conn.execute(
                 "SELECT * FROM flip_responses WHERE word_id=?",
@@ -239,11 +192,8 @@ def flip_get_responses(word_id=None):
             ).fetchall()
 
         results = []
-
         for row in rows:
             item = dict(row)
-
-            # 기존 값 known / unsure / unknown이 남아 있어도 새 구조에 맞게 변환
             old_value = item.get("rating", "")
 
             if old_value == "known":
@@ -297,9 +247,6 @@ def my_words_delete(item_id, student):
         )
 
 
-# -----------------------------
-# Reading: Text Spotlight
-# -----------------------------
 def ts_set_text(sentences):
     with get_conn() as conn:
         conn.execute("DELETE FROM ts_sentences")
@@ -406,9 +353,7 @@ def ts_get_student_memo(student, sentence_idx):
 
 def ts_get_all_tags():
     with get_conn() as conn:
-        rows = conn.execute(
-            "SELECT * FROM ts_tags"
-        ).fetchall()
+        rows = conn.execute("SELECT * FROM ts_tags").fetchall()
         return [dict(r) for r in rows]
 
 
