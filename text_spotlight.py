@@ -1,30 +1,42 @@
 """
-text_spotlight.py — Reading: Text Spotlight
-
-학생
-- 문장별 태그
-- 메모 작성
-- 제출
-- 교사가 공개하면 전체 결과 보기
-
-교사
-- 하단 Teacher Settings에서 비밀번호 입력 후 접근
+text_spotlight.py — Reading
 """
 
 import re
+import html
 from collections import defaultdict
 
 import streamlit as st
 import db
 
-TEACHER_PASSWORD = "daea1234"
-
 TAGS = {
-    "글의 주제": {"color": "#633806", "bg": "#FAEEDA", "icon": "📍"},
-    "날개 문제 근거": {"color": "#085041", "bg": "#E1F5EE", "icon": "🔍"},
-    "문법·구조": {"color": "#3C3489", "bg": "#EEEDFE", "icon": "✏️"},
-    "이해 안 됨": {"color": "#A32D2D", "bg": "#FCEBEB", "icon": "❓"},
+    "글의 주제": {
+        "color": "#8A4B00",
+        "bg": "#FFF1D6",
+        "border": "#F4A62A",
+        "icon": "📍",
+    },
+    "날개 문제 근거": {
+        "color": "#075F4A",
+        "bg": "#DFF7EE",
+        "border": "#2AA876",
+        "icon": "🔍",
+    },
+    "문법·구조": {
+        "color": "#4636A8",
+        "bg": "#EEECFF",
+        "border": "#6C5CE7",
+        "icon": "✏️",
+    },
+    "이해 안 됨": {
+        "color": "#A32D2D",
+        "bg": "#FCE5E5",
+        "border": "#E05252",
+        "icon": "❓",
+    },
 }
+
+NO_TAG = "선택 안 함"
 
 SAMPLE_TEXT = """In the 1880s, industry began to grow rapidly along the Cuyahoga River in the city of Cleveland. This industrial growth provided steady jobs to people in the area. Meanwhile, steel mills and factories started dumping large amounts of waste into the river. Although the river became polluted, most people simply regarded this as a sign of the area’s economic success."""
 
@@ -40,15 +52,12 @@ def split_sentences(text):
 
 
 def render(student_id=""):
-    st.markdown("## 📚 Reading — Text Spotlight")
+    st.markdown("## 📚 Reading")
 
     sentences = db.ts_get_sentences()
     revealed = db.get_state("ts_state", "reveal", "false") == "true"
 
     render_student_reading(student_id, sentences, revealed)
-
-    st.markdown("---")
-    render_hidden_teacher_settings(sentences, revealed)
 
 
 def render_student_reading(student_id, sentences, revealed):
@@ -73,47 +82,81 @@ def render_student_reading(student_id, sentences, revealed):
 
     if revealed:
         st.success("🔓 Class tags are now open. Discuss the results together.")
-        render_heatmap(show_memos=True)
+        render_class_shared_view()
         return
 
     if db.ts_is_submitted(student_id):
         st.success("제출 완료! 선생님이 태그를 공개하면 반 전체 결과를 볼 수 있어요.")
+        render_own_readonly_view(student_id, sentences)
         return
 
-    st.info("각 문장을 읽고 해당되는 태그를 자유롭게 선택하세요. 메모는 선택입니다.")
+    st.info("문장을 읽고 카테고리를 선택하면 해당 색상으로 하이라이트됩니다. 의견은 문장 옆 박스에 적으세요.")
 
     for sent in sentences:
         idx = sent["idx"]
-
-        st.markdown(
-            f"""
-            <div style="background:white; border:1px solid #E0E8FF; border-radius:12px;
-                        padding:14px 16px; margin-bottom:6px;">
-              <span style="font-size:12px; color:#8FA8E8;">Sentence {idx + 1}</span><br>
-              <span style="font-size:15px; line-height:1.7;">{sent['text']}</span>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        sentence_text = sent["text"]
 
         existing_tags = db.ts_get_student_tags(student_id, idx)
+        existing_tag = existing_tags[0] if existing_tags else NO_TAG
         existing_memo = db.ts_get_student_memo(student_id, idx)
 
-        st.multiselect(
-            "Choose tags",
-            list(TAGS.keys()),
-            default=existing_tags,
-            key=f"student_tag_{idx}",
-            label_visibility="collapsed",
+        widget_key = f"student_tag_{idx}"
+        memo_key = f"student_memo_{idx}"
+
+        current_tag = st.session_state.get(widget_key, existing_tag)
+        if current_tag not in TAGS:
+            current_tag = NO_TAG
+
+        tag_info = TAGS.get(
+            current_tag,
+            {
+                "color": "#1F2937",
+                "bg": "#FFFFFF",
+                "border": "#E0E8FF",
+                "icon": "",
+            },
         )
 
-        st.text_input(
-            "Memo",
-            value=existing_memo,
-            key=f"student_memo_{idx}",
-            placeholder="Optional memo",
-            label_visibility="collapsed",
-        )
+        left, right = st.columns([2.4, 1])
+
+        with left:
+            render_sentence_card(
+                sentence_number=idx + 1,
+                sentence=sentence_text,
+                tag_info=tag_info,
+                selected_tag=current_tag,
+            )
+
+        with right:
+            st.markdown(
+                f"""
+                <div style="background:white; border:1px solid #E0E8FF; border-radius:14px;
+                            padding:12px; margin-bottom:6px;">
+                <b>Your tag & opinion</b>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            options = [NO_TAG] + list(TAGS.keys())
+            default_index = options.index(current_tag) if current_tag in options else 0
+
+            st.selectbox(
+                "Category",
+                options,
+                index=default_index,
+                key=widget_key,
+                label_visibility="collapsed",
+            )
+
+            st.text_area(
+                "Opinion",
+                value=existing_memo,
+                key=memo_key,
+                placeholder="Write your reason, question, or opinion.",
+                height=105,
+                label_visibility="collapsed",
+            )
 
         st.markdown("")
 
@@ -130,65 +173,239 @@ def render_student_reading(student_id, sentences, revealed):
         st.rerun()
 
 
+def render_sentence_card(sentence_number, sentence, tag_info, selected_tag):
+    safe_sentence = html.escape(sentence)
+
+    if selected_tag == NO_TAG:
+        chip = "<span style='color:#9CA3AF; font-size:12px;'>No highlight yet</span>"
+    else:
+        chip = (
+            f"<span style='background:{tag_info['bg']}; color:{tag_info['color']}; "
+            f"border:1px solid {tag_info['border']}; padding:4px 10px; "
+            f"border-radius:20px; font-size:12px; font-weight:800;'>"
+            f"{tag_info['icon']} {selected_tag}</span>"
+        )
+
+    st.markdown(
+        f"""
+        <div style="background:{tag_info['bg']}; border:2px solid {tag_info['border']};
+                    border-radius:16px; padding:18px 20px; min-height:150px;">
+          <div style="font-size:12px; font-weight:900; color:{tag_info['color']};
+                      margin-bottom:8px;">
+            Sentence {sentence_number}
+          </div>
+          <div style="font-size:20px; line-height:1.75; font-weight:900; color:#111827;">
+            {safe_sentence}
+          </div>
+          <div style="margin-top:12px;">
+            {chip}
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def save_current_tags(student_id, sentences):
     for sent in sentences:
         idx = sent["idx"]
-        selected_tags = st.session_state.get(f"student_tag_{idx}", [])
+        selected_tag = st.session_state.get(f"student_tag_{idx}", NO_TAG)
         memo = st.session_state.get(f"student_memo_{idx}", "")
-        db.ts_save_tags(student_id, idx, selected_tags)
+
+        if selected_tag == NO_TAG:
+            db.ts_save_tags(student_id, idx, [])
+        else:
+            db.ts_save_tags(student_id, idx, [selected_tag])
+
         db.ts_save_memo(student_id, idx, memo)
 
 
-def render_hidden_teacher_settings(sentences, revealed):
-    with st.expander("🔐 Teacher Settings", expanded=False):
-        pw = st.text_input(
-            "Teacher password",
-            type="password",
-            key="reading_teacher_pw",
-            placeholder="Enter password",
+def render_own_readonly_view(student_id, sentences):
+    st.markdown("### Your submitted tags")
+
+    for sent in sentences:
+        idx = sent["idx"]
+        tags = db.ts_get_student_tags(student_id, idx)
+        memo = db.ts_get_student_memo(student_id, idx)
+
+        tag = tags[0] if tags else NO_TAG
+        tag_info = TAGS.get(
+            tag,
+            {
+                "color": "#1F2937",
+                "bg": "#FFFFFF",
+                "border": "#E0E8FF",
+                "icon": "",
+            },
         )
 
-        if not pw:
-            st.caption("교사용 설정은 비밀번호 입력 후 사용할 수 있습니다.")
-            return
+        left, right = st.columns([2.4, 1])
 
-        if pw != TEACHER_PASSWORD:
-            st.error("비밀번호가 올바르지 않습니다.")
-            return
+        with left:
+            render_sentence_card(idx + 1, sent["text"], tag_info, tag)
 
-        st.success("Teacher mode unlocked.")
-
-        tab1, tab2, tab3 = st.tabs(["Preview", "Teacher Controls", "Class Results"])
-
-        with tab1:
-            if not sentences:
-                st.info("아직 등록된 지문이 없습니다.")
-            elif revealed:
-                st.success("현재 학생들에게 히트맵이 공개되어 있습니다.")
-                render_heatmap(show_memos=True)
-            else:
-                st.info("현재 학생들은 개별 태깅 중입니다. 히트맵은 숨겨져 있습니다.")
-                render_text_preview()
-
-        with tab2:
-            render_teacher_controls(revealed)
-
-        with tab3:
-            render_class_results()
+        with right:
+            render_comment_box(student_id, tag, memo)
 
 
-def render_text_preview():
+def render_class_shared_view():
     sentences = db.ts_get_sentences()
-    questions = db.ts_get_questions()
+    all_tags = db.ts_get_all_tags()
+    all_memos = db.ts_get_all_memos()
 
-    if questions:
-        st.markdown("### Wing Questions")
-        for i, question in enumerate(questions, 1):
-            st.markdown(f"**Q{i}.** {question['text']}")
+    tag_by_sentence = defaultdict(list)
+    memo_by_sentence = defaultdict(list)
 
-    st.markdown("### Text")
+    for tag in all_tags:
+        tag_by_sentence[tag["sentence_idx"]].append(tag)
+
+    for memo in all_memos:
+        memo_by_sentence[memo["sentence_idx"]].append(memo)
+
     for sent in sentences:
-        st.markdown(f"**{sent['idx'] + 1}.** {sent['text']}")
+        idx = sent["idx"]
+
+        dominant_tag = get_dominant_tag(tag_by_sentence[idx])
+        tag_info = TAGS.get(
+            dominant_tag,
+            {
+                "color": "#1F2937",
+                "bg": "#FFFFFF",
+                "border": "#E0E8FF",
+                "icon": "",
+            },
+        )
+
+        left, right = st.columns([2.2, 1.2])
+
+        with left:
+            render_sentence_card(
+                sentence_number=idx + 1,
+                sentence=sent["text"],
+                tag_info=tag_info,
+                selected_tag=dominant_tag,
+            )
+
+            render_sentence_tag_summary(tag_by_sentence[idx])
+
+        with right:
+            st.markdown("**Class opinions**")
+
+            comments = memo_by_sentence[idx]
+
+            if not comments:
+                st.caption("No opinions yet.")
+            else:
+                for memo in comments:
+                    student = memo["student"]
+                    memo_text = memo["memo"]
+                    student_tags = [
+                        t["tag"]
+                        for t in tag_by_sentence[idx]
+                        if t["student"] == student
+                    ]
+                    tag = student_tags[0] if student_tags else NO_TAG
+                    render_comment_box(student, tag, memo_text)
+
+        st.markdown("")
+
+
+def get_dominant_tag(tags):
+    if not tags:
+        return NO_TAG
+
+    counts = defaultdict(int)
+
+    for tag in tags:
+        counts[tag["tag"]] += 1
+
+    return max(counts.items(), key=lambda x: x[1])[0]
+
+
+def render_sentence_tag_summary(tags):
+    counts = defaultdict(int)
+
+    for tag in tags:
+        counts[tag["tag"]] += 1
+
+    if not counts:
+        st.caption("No class tags yet.")
+        return
+
+    chips = ""
+
+    for tag_name, count in sorted(counts.items(), key=lambda x: -x[1]):
+        info = TAGS[tag_name]
+        chips += (
+            f"<span style='background:{info['bg']}; color:{info['color']}; "
+            f"border:1px solid {info['border']}; padding:4px 10px; "
+            f"border-radius:20px; font-size:12px; font-weight:800; margin-right:5px;'>"
+            f"{info['icon']} {tag_name} {count}</span>"
+        )
+
+    st.markdown(
+        f"""
+        <div style="margin-top:8px;">{chips}</div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_comment_box(student, tag, memo):
+    safe_student = html.escape(student)
+    safe_memo = html.escape(memo)
+
+    if not safe_memo:
+        safe_memo = "<span style='color:#999;'>No opinion</span>"
+
+    info = TAGS.get(
+        tag,
+        {
+            "color": "#1F2937",
+            "bg": "#FFFFFF",
+            "border": "#E0E8FF",
+            "icon": "",
+        },
+    )
+
+    tag_label = tag if tag != NO_TAG else "No tag"
+
+    st.markdown(
+        f"""
+        <div style="background:{info['bg']}; border:1.5px solid {info['border']};
+                    border-radius:14px; padding:10px 12px; margin-bottom:8px;">
+          <div style="font-size:12px; font-weight:900; color:{info['color']}; margin-bottom:5px;">
+            {info['icon']} {html.escape(tag_label)}
+          </div>
+          <div style="font-size:13px; font-weight:800; color:#111827;">
+            {safe_student}
+          </div>
+          <div style="font-size:13px; line-height:1.5; color:#374151; margin-top:4px;">
+            {safe_memo}
+          </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
+def render_tag_legend():
+    legend = ""
+
+    for name, info in TAGS.items():
+        legend += (
+            f"<span style='background:{info['bg']}; color:{info['color']}; "
+            f"border:1px solid {info['border']}; padding:5px 12px; "
+            f"border-radius:20px; font-size:13px; font-weight:900; margin-right:6px;'>"
+            f"{info['icon']} {name}</span>"
+        )
+
+    st.markdown(
+        f"""
+        <div style="margin:10px 0 16px 0;">{legend}</div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def render_teacher_controls(revealed):
@@ -220,9 +437,11 @@ def render_teacher_controls(revealed):
         else:
             sentence_list = split_sentences(text)
             question_list = [q.strip() for q in questions.splitlines() if q.strip()]
+
             db.ts_set_text(sentence_list)
             db.ts_set_questions(question_list)
             db.set_state("ts_state", "reveal", "false")
+
             st.success("새 Reading 활동을 시작했습니다.")
             st.rerun()
 
@@ -269,114 +488,4 @@ def render_class_results():
         return
 
     st.markdown("### Heatmap Preview")
-    render_heatmap(show_memos=True)
-
-
-def render_tag_legend():
-    legend = " ".join(
-        f"""
-        <span style='background:{info["bg"]}; color:{info["color"]};
-                     padding:4px 10px; border-radius:20px;
-                     font-size:12px; font-weight:700; margin-right:5px;'>
-            {info["icon"]} {name}
-        </span>
-        """
-        for name, info in TAGS.items()
-    )
-    st.markdown(legend, unsafe_allow_html=True)
-    st.markdown("")
-
-
-def render_heatmap(show_memos=False):
-    sentences = db.ts_get_sentences()
-    all_tags = db.ts_get_all_tags()
-    all_memos = db.ts_get_all_memos()
-    participants = db.ts_get_participants()
-
-    total_students = max(len(participants), 1)
-
-    sent_tag_counts = defaultdict(lambda: defaultdict(int))
-    sent_memos = defaultdict(list)
-
-    for tag in all_tags:
-        sent_tag_counts[tag["sentence_idx"]][tag["tag"]] += 1
-
-    for memo in all_memos:
-        sent_memos[memo["sentence_idx"]].append(memo)
-
-    for sent in sentences:
-        idx = sent["idx"]
-        tag_counts = sent_tag_counts.get(idx, {})
-        total_tags = sum(tag_counts.values())
-        heat = total_tags / total_students
-
-        if heat >= 1:
-            bar = "#3C3489"
-        elif heat >= 0.5:
-            bar = "#9F9CE0"
-        elif heat > 0:
-            bar = "#D8D6F5"
-        else:
-            bar = "#EEEEEE"
-
-        chips = ""
-        for tag_name, count in sorted(tag_counts.items(), key=lambda x: -x[1]):
-            info = TAGS.get(tag_name, {"bg": "#eee", "color": "#555", "icon": ""})
-            chips += (
-                f"<span style='background:{info['bg']}; color:{info['color']}; "
-                f"padding:3px 9px; border-radius:20px; font-size:12px; "
-                f"font-weight:700; margin-right:4px;'>"
-                f"{info['icon']} {tag_name} {count}</span>"
-            )
-
-        memo_html = ""
-        if show_memos and idx in sent_memos:
-            memo_html = "<div style='margin-top:8px;'>"
-            for memo in sent_memos[idx]:
-                memo_html += (
-                    f"<div style='font-size:13px; color:#666; margin-top:4px;'>"
-                    f"💬 <b>{memo['student']}</b>: {memo['memo']}</div>"
-                )
-            memo_html += "</div>"
-
-        st.markdown(
-            f"""
-            <div style="background:white; border-left:5px solid {bar};
-                        border-radius:0 12px 12px 0; padding:14px 16px;
-                        margin-bottom:8px; border-top:1px solid #eee;
-                        border-right:1px solid #eee; border-bottom:1px solid #eee;">
-              <span style="font-size:12px; color:#8FA8E8;">
-                Sentence {idx + 1} · Tags {total_tags}
-              </span><br>
-              <span style="font-size:15px; line-height:1.7;">{sent['text']}</span>
-              <div style="margin-top:8px;">
-                {chips if chips else "<span style='color:#bbb; font-size:13px;'>No tags</span>"}
-              </div>
-              {memo_html}
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    st.markdown("### Tag Type Summary")
-
-    type_total = defaultdict(int)
-    for tag in all_tags:
-        type_total[tag["tag"]] += 1
-
-    cols = st.columns(len(TAGS))
-    for col, (name, info) in zip(cols, TAGS.items()):
-        col.markdown(
-            f"""
-            <div style="background:{info['bg']}; border-radius:12px;
-                        padding:12px; text-align:center;">
-              <div style="font-size:1.5rem; font-weight:900; color:{info['color']};">
-                {type_total.get(name, 0)}
-              </div>
-              <div style="font-size:12px; color:{info['color']};">
-                {info['icon']} {name}
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    render_class_shared_view()
