@@ -32,12 +32,10 @@ def apply_style():
             font-family: 'Nunito', sans-serif;
         }
 
-        /* 앱 전체 배경: 흰색 */
         .stApp {
             background: #FFFFFF;
         }
 
-        /* 왼쪽 사이드바: 연하늘색 */
         section[data-testid="stSidebar"] {
             background: #E0F2FE;
         }
@@ -46,7 +44,6 @@ def apply_style():
             color: #0369A1 !important;
         }
 
-        /* 사이드바 제목, 라벨 */
         section[data-testid="stSidebar"] h1,
         section[data-testid="stSidebar"] h2,
         section[data-testid="stSidebar"] h3,
@@ -56,7 +53,6 @@ def apply_style():
             font-weight: 800;
         }
 
-        /* 학번 입력창 */
         section[data-testid="stSidebar"] input {
             background: #FFFFFF !important;
             color: #0F172A !important;
@@ -64,7 +60,6 @@ def apply_style():
             border-radius: 10px !important;
         }
 
-        /* 왼쪽 메뉴 버튼 */
         section[data-testid="stSidebar"] div[data-testid="stButton"] > button {
             background: #FFFFFF !important;
             color: #0284C7 !important;
@@ -86,13 +81,11 @@ def apply_style():
             color: #0369A1 !important;
         }
 
-        /* 일반 버튼 */
         div[data-testid="stButton"] > button {
             border-radius: 12px;
             font-weight: 800;
         }
 
-        /* 홈 화면 학교명 */
         .home-school {
             text-align: center;
             font-size: 1.25rem;
@@ -104,7 +97,6 @@ def apply_style():
             margin-bottom: 8px;
         }
 
-        /* 홈 화면 제목 */
         .home-title {
             text-align: center;
             font-size: 3.6rem;
@@ -146,7 +138,7 @@ def go_page(page_name):
 
 
 with st.sidebar:
-    st.markdown("## 📚 English Reading Lab")
+    st.markdown("## 📚 English Reading Class")
 
     student_id = st.text_input(
         "학번",
@@ -235,14 +227,11 @@ def show_teacher_settings():
         flip_recall.render_teacher_controls()
 
     with tab2:
-        st.markdown("### Reading Settings")
-
         revealed = db.get_state("ts_state", "reveal", "false") == "true"
 
         text_spotlight.render_teacher_controls(revealed)
 
         st.markdown("---")
-        st.markdown("### Class Results")
         text_spotlight.render_class_results()
 
 
