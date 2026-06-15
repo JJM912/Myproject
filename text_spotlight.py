@@ -1,5 +1,6 @@
 """
 text_spotlight.py — Reading
+문장 단위 하이라이트 + 의견 박스 구조
 """
 
 import re
@@ -8,6 +9,7 @@ from collections import defaultdict
 
 import streamlit as st
 import db
+
 
 TAGS = {
     "글의 주제": {
@@ -49,6 +51,22 @@ SAMPLE_QUESTIONS = [
 def split_sentences(text):
     sentences = re.split(r"(?<=[.!?])\s+", text.strip())
     return [s.strip() for s in sentences if s.strip()]
+
+
+def normalize_tag(value):
+    """
+    예전 multiselect 값이 session_state에 list로 남아 있어도
+    새 selectbox 구조에서 오류가 나지 않도록 문자열로 변환.
+    """
+    if isinstance(value, list):
+        if len(value) == 0:
+            return NO_TAG
+        return value[0]
+
+    if value in TAGS:
+        return value
+
+    return NO_TAG
 
 
 def render(student_id=""):
@@ -100,12 +118,12 @@ def render_student_reading(student_id, sentences, revealed):
         existing_tag = existing_tags[0] if existing_tags else NO_TAG
         existing_memo = db.ts_get_student_memo(student_id, idx)
 
-        widget_key = f"student_tag_{idx}"
+        # 예전 session_state와 충돌하지 않도록 key 이름 변경
+        widget_key = f"student_tag_single_{idx}"
         memo_key = f"student_memo_{idx}"
 
-        current_tag = st.session_state.get(widget_key, existing_tag)
-        if current_tag not in TAGS:
-            current_tag = NO_TAG
+        raw_current_tag = st.session_state.get(widget_key, existing_tag)
+        current_tag = normalize_tag(raw_current_tag)
 
         tag_info = TAGS.get(
             current_tag,
@@ -129,7 +147,7 @@ def render_student_reading(student_id, sentences, revealed):
 
         with right:
             st.markdown(
-                f"""
+                """
                 <div style="background:white; border:1px solid #E0E8FF; border-radius:14px;
                             padding:12px; margin-bottom:6px;">
                 <b>Your tag & opinion</b>
@@ -162,12 +180,12 @@ def render_student_reading(student_id, sentences, revealed):
 
     c1, c2 = st.columns(2)
 
-    if c1.button("Save Draft", use_container_width=True):
+    if c1.button("Save Draft", width="stretch"):
         save_current_tags(student_id, sentences)
         st.success("저장되었습니다. 제출 전이라 수정할 수 있어요.")
         st.rerun()
 
-    if c2.button("Submit Reading Tags", type="primary", use_container_width=True):
+    if c2.button("Submit Reading Tags", type="primary", width="stretch"):
         save_current_tags(student_id, sentences)
         db.ts_mark_submitted(student_id)
         st.rerun()
@@ -209,7 +227,9 @@ def render_sentence_card(sentence_number, sentence, tag_info, selected_tag):
 def save_current_tags(student_id, sentences):
     for sent in sentences:
         idx = sent["idx"]
-        selected_tag = st.session_state.get(f"student_tag_{idx}", NO_TAG)
+        selected_tag = st.session_state.get(f"student_tag_single_{idx}", NO_TAG)
+        selected_tag = normalize_tag(selected_tag)
+
         memo = st.session_state.get(f"student_memo_{idx}", "")
 
         if selected_tag == NO_TAG:
@@ -461,11 +481,11 @@ def render_teacher_controls(revealed):
 
     b1, b2 = st.columns(2)
 
-    if b1.button("🔓 Show Class Tags", type="primary", use_container_width=True):
+    if b1.button("🔓 Show Class Tags", type="primary", width="stretch"):
         db.set_state("ts_state", "reveal", "true")
         st.rerun()
 
-    if b2.button("🔒 Hide Class Tags", use_container_width=True):
+    if b2.button("🔒 Hide Class Tags", width="stretch"):
         db.set_state("ts_state", "reveal", "false")
         st.rerun()
 
