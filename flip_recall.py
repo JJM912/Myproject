@@ -1,18 +1,9 @@
 """
-flip_recall.py — Word: Flip & Recall
-
-학생
-- Class Practice
-- My Words
-
-교사
-- 페이지 맨 아래 Teacher Settings
+flip_recall.py — Word
 """
 
 import streamlit as st
 import db
-
-TEACHER_PASSWORD = "daea1234"
 
 SAMPLE_WORDS = [
     ("pollution", "오염", "The river suffered from serious pollution."),
@@ -23,7 +14,7 @@ SAMPLE_WORDS = [
 
 
 def render(student_id=""):
-    st.markdown("## ✏️ Word — Flip & Recall")
+    st.markdown("## ✏️ Word")
 
     tab1, tab2 = st.tabs(["Class Practice", "My Words"])
 
@@ -32,9 +23,6 @@ def render(student_id=""):
 
     with tab2:
         render_my_words(student_id)
-
-    st.markdown("---")
-    render_hidden_teacher_settings()
 
 
 def render_class_practice(student_id):
@@ -157,28 +145,8 @@ def render_my_words(student_id):
                 st.rerun()
 
 
-def render_hidden_teacher_settings():
-    with st.expander("🔐 Teacher Settings", expanded=False):
-        pw = st.text_input(
-            "Teacher password",
-            type="password",
-            key="word_teacher_pw",
-            placeholder="Enter password",
-        )
-
-        if not pw:
-            st.caption("교사용 설정은 비밀번호 입력 후 사용할 수 있습니다.")
-            return
-
-        if pw != TEACHER_PASSWORD:
-            st.error("비밀번호가 올바르지 않습니다.")
-            return
-
-        render_teacher_controls()
-
-
 def render_teacher_controls():
-    st.success("Teacher mode unlocked.")
+    st.markdown("### Word Settings")
 
     words = db.flip_get_words()
     active = db.get_state("flip_state", "active", "false") == "true"
