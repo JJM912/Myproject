@@ -1,8 +1,9 @@
 """
 flip_recall.py — Word
 
-단어 목록은 코드에서만 관리합니다.
-Teacher Settings 화면에는 수업 진행에 필요한 Control Cards / Results만 표시됩니다.
+- 단어 목록은 코드에서 관리
+- 학생 화면은 자동 새로고침으로 교사 카드 이동을 반영
+- Teacher Settings에서 현재 단어를 큰 화면으로 미리보기
 """
 
 import json
@@ -12,13 +13,11 @@ import html
 import streamlit as st
 import db
 
+try:
+    from streamlit_autorefresh import st_autorefresh
+except Exception:
+    st_autorefresh = None
 
-# =================================================
-# 단어 목록
-# 다른 단어를 추가하고 싶으면 여기에 한 줄씩 추가하면 됩니다.
-# 형식:
-# {"word": "단어", "meaning": "뜻", "definition": "영영 뜻풀이"},
-# =================================================
 
 CODE_WORDS = [
     {"word": "capture", "meaning": "정확히 포착하다, 담아내다", "definition": "v. to record or take a picture with a camera"},
@@ -67,12 +66,17 @@ CODE_WORDS = [
 ]
 
 
-# =================================================
-# 기본 함수
-# =================================================
-
 def safe(text):
     return html.escape(str(text))
+
+
+def word_auto_refresh(key, interval=2000):
+    """
+    교사가 카드를 넘기면 학생 화면에 자동 반영되도록 2초마다 새로고침.
+    streamlit-autorefresh가 설치되지 않아도 앱이 멈추지 않도록 처리.
+    """
+    if st_autorefresh is not None:
+        st_autorefresh(interval=interval, key=key)
 
 
 def get_code_words_hash():
@@ -81,13 +85,8 @@ def get_code_words_hash():
 
 
 def sync_code_words_if_needed():
-    """
-    코드의 CODE_WORDS가 바뀌면 DB 단어 목록을 자동으로 교체합니다.
-    따라서 Teacher Settings에서 단어를 직접 붙여넣을 필요가 없습니다.
-    """
     current_hash = get_code_words_hash()
     saved_hash = db.get_state("flip_state", "code_words_hash", "")
-
     current_words = db.flip_get_words()
 
     if saved_hash == current_hash and current_words:
@@ -109,9 +108,72 @@ def sync_code_words_if_needed():
     db.set_state("flip_state", "flipped", "false")
 
 
-# =================================================
-# 학생 화면
-# =================================================
+def get_current_word_state():
+    words = db.flip_get_words()
+    active = db.get_state("flip_state", "active", "false") == "true"
+    current_idx = int(db.get_state("flip_state", "current_idx", "0"))
+    flipped = db.get_state("flip_state", "flipped", "false") == "true"
+
+    if not words:
+        return words, active, current_idx, flipped, None
+
+    if current_idx >= len(words):
+        current_idx = len(words) - 1
+        db.set_state("flip_state", "current_idx", str(current_idx))
+
+    current_word = words[current_idx]
+    return words, active, current_idx, flipped, current_word
+
+
+def render_word_card(word, current_idx, total, flipped, teacher_preview=False):
+    word_text = safe(word["word"])
+    meaning_text = safe(word["meaning"])
+    definition_text = safe(word.get("example", ""))
+
+    label = "Teacher Preview" if teacher_preview else "Card"
+
+    if not flipped:
+        st.markdown(
+            f"""
+            <div style="background:white; border:3px solid #38BDF8; border-radius:22px;
+                        padding:3.5rem 2rem; text-align:center;
+                        box-shadow:0 10px 25px rgba(56,189,248,.18); margin-bottom:1rem;">
+              <div style="font-size:1rem; font-weight:900; color:#0284C7; margin-bottom:1rem;">
+                {label} {current_idx + 1} / {total}
+              </div>
+              <div style="font-size:4rem; font-weight:900; color:#0284C7;">
+                {word_text}
+              </div>
+              <div style="color:#64748B; margin-top:16px; font-size:1.1rem;">
+                Think about the meaning.
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            f"""
+            <div style="background:white; border:3px solid #38BDF8; border-radius:22px;
+                        padding:3rem 2rem; text-align:center;
+                        box-shadow:0 10px 25px rgba(56,189,248,.18); margin-bottom:1rem;">
+              <div style="font-size:1rem; font-weight:900; color:#0284C7; margin-bottom:1rem;">
+                {label} {current_idx + 1} / {total}
+              </div>
+              <div style="font-size:3.4rem; font-weight:900; color:#0284C7;">
+                {word_text}
+              </div>
+              <div style="font-size:1.8rem; color:#0F172A; font-weight:900; margin-top:14px;">
+                {meaning_text}
+              </div>
+              <div style="color:#475569; font-style:italic; margin-top:16px; font-size:1.1rem;">
+                {definition_text}
+              </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
 
 def render(student_id=""):
     sync_code_words_if_needed()
@@ -128,91 +190,54 @@ def render(student_id=""):
 
 
 def render_class_practice(student_id):
-    words = db.flip_get_words()
+    word_auto_refresh("student_word_refresh", interval=2000)
 
-    active = db.get_state("flip_state", "active", "false") == "true"
-    current_idx = int(db.get_state("flip_state", "current_idx", "0"))
-    flipped = db.get_state("flip_state", "flipped", "false") == "true"
+    words, active, current_idx, flipped, word = get_current_word_state()
 
     if not words:
         st.info("아직 단어가 등록되지 않았습니다.")
         return
 
-    if not active or current_idx >= len(words):
+    if not active or word is None:
         st.info("아직 카드가 시작되지 않았습니다. 선생님이 시작하면 여기에 나타납니다.")
         return
 
-    word = words[current_idx]
+    render_word_card(word, current_idx, len(words), flipped, teacher_preview=False)
 
-    st.caption(f"Card {current_idx + 1} / {len(words)}")
+    student_id = student_id.strip()
 
-    word_text = safe(word["word"])
-    meaning_text = safe(word["meaning"])
-    definition_text = safe(word.get("example", ""))
+    if not student_id:
+        st.warning("왼쪽 사이드바에 학번을 입력하면 응답할 수 있어요.")
+        return
 
-    if not flipped:
-        st.markdown(
-            f"""
-            <div style="background:white; border:2px solid #38BDF8; border-radius:18px;
-                        padding:3rem; text-align:center; box-shadow:0 8px 20px rgba(56,189,248,.15);">
-              <div style="font-size:3rem; font-weight:900; color:#0284C7;">{word_text}</div>
-              <div style="color:#64748B; margin-top:12px;">Think about the meaning.</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
+    existing = [
+        r for r in db.flip_get_responses(word["id"])
+        if r["student"] == student_id
+    ]
+
+    current_response = existing[0]["response"] if existing else ""
+
+    if current_response == "know":
+        st.success("현재 응답: I Know It")
+    elif current_response == "save":
+        st.success("현재 응답: Save to My Words")
+
+    c1, c2 = st.columns(2)
+
+    if c1.button("✅ I Know It", width="stretch", key=f"know_{word['id']}"):
+        db.flip_save_response(student_id, word["id"], "know")
+        st.rerun()
+
+    if c2.button("⭐ Save to My Words", width="stretch", key=f"save_{word['id']}"):
+        db.flip_save_response(student_id, word["id"], "save")
+        db.my_words_add(
+            student_id,
+            word["id"],
+            word["word"],
+            word["meaning"],
+            word.get("example", ""),
         )
-
-    else:
-        st.markdown(
-            f"""
-            <div style="background:white; border:2px solid #38BDF8; border-radius:18px;
-                        padding:2rem; text-align:center; box-shadow:0 8px 20px rgba(56,189,248,.15);">
-              <div style="font-size:2.5rem; font-weight:900; color:#0284C7;">{word_text}</div>
-              <div style="font-size:1.55rem; color:#0F172A; font-weight:800; margin-top:10px;">
-                {meaning_text}
-              </div>
-              <div style="color:#475569; font-style:italic; margin-top:12px;">
-                {definition_text}
-              </div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        student_id = student_id.strip()
-
-        if not student_id:
-            st.warning("왼쪽 사이드바에 학번을 입력하면 응답할 수 있어요.")
-        else:
-            existing = [
-                r for r in db.flip_get_responses(word["id"])
-                if r["student"] == student_id
-            ]
-
-            if existing:
-                response = existing[0]["response"]
-
-                if response == "know":
-                    st.success("응답 완료: I Know It")
-                else:
-                    st.success("응답 완료: Save to My Words")
-            else:
-                c1, c2 = st.columns(2)
-
-                if c1.button("✅ I Know It", width="stretch"):
-                    db.flip_save_response(student_id, word["id"], "know")
-                    st.rerun()
-
-                if c2.button("⭐ Save to My Words", width="stretch"):
-                    db.flip_save_response(student_id, word["id"], "save")
-                    db.my_words_add(
-                        student_id,
-                        word["id"],
-                        word["word"],
-                        word["meaning"],
-                        word.get("example", ""),
-                    )
-                    st.rerun()
+        st.rerun()
 
     st.markdown("### Class Summary")
     render_word_summary(word["id"])
@@ -230,7 +255,7 @@ def render_word_summary(word_id):
 
     c1, c2, c3 = st.columns(3)
     c1.metric("I Know It", know)
-    c2.metric("Saved to My Words", save_count)
+    c2.metric("Save to My Words", save_count)
     c3.metric("Total Responses", total)
 
 
@@ -262,19 +287,13 @@ def render_my_words(student_id):
                 st.rerun()
 
 
-# =================================================
-# 교사 화면
-# =================================================
-
 def render_teacher_controls():
     sync_code_words_if_needed()
+    word_auto_refresh("teacher_word_refresh", interval=2500)
 
     st.markdown("### Word Settings")
 
-    words = db.flip_get_words()
-
-    active = db.get_state("flip_state", "active", "false") == "true"
-    current_idx = int(db.get_state("flip_state", "current_idx", "0"))
+    words, active, current_idx, flipped, current_word = get_current_word_state()
 
     st.info(
         f"현재 단어 목록은 코드의 CODE_WORDS에서 자동으로 불러옵니다. "
@@ -312,7 +331,26 @@ def render_teacher_controls():
             st.caption(f"Current card: {current_idx + 1} / {len(words)}")
             st.progress((current_idx + 1) / len(words))
 
-    with st.expander("② Results", expanded=True):
+    with st.expander("② Current Student Screen", expanded=True):
+        if not words:
+            st.info("단어가 없습니다.")
+        elif not active or current_word is None:
+            st.info("아직 카드가 시작되지 않았습니다. Start를 누르면 학생 화면에 단어가 나타납니다.")
+        else:
+            render_word_card(
+                current_word,
+                current_idx,
+                len(words),
+                flipped,
+                teacher_preview=True,
+            )
+
+            st.caption(
+                "이 카드가 현재 학생 Word 페이지에 보이는 카드입니다. "
+                "학생 화면은 약 2초마다 자동 갱신됩니다."
+            )
+
+    with st.expander("③ Results", expanded=True):
         if not words:
             st.info("단어가 없습니다.")
         else:
@@ -330,7 +368,7 @@ def render_teacher_controls():
                         "word": word["word"],
                         "meaning": word["meaning"],
                         "I Know It": know,
-                        "Saved to My Words": save_count,
+                        "Save to My Words": save_count,
                         "Total": total,
                     }
                 )
