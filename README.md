@@ -133,9 +133,6 @@ The current version has several limitations:
 
 - The Reading section may not run smoothly on some mobile phones.
 - The readability of the Reading section can be improved further, especially on small screens.
-- The app currently uses a local SQLite database, so long-term data storage may be limited depending on the deployment environment.
-- The reading content and vocabulary are currently managed through code, so non-technical teachers may need support when updating materials.
-- More detailed analytics could be added to better track student progress.
 
 ---
 
@@ -147,8 +144,3 @@ Future improvements could include:
 
 - Improving mobile compatibility for the Reading section
 - Enhancing readability on smaller screens
-- Adding an easier teacher interface for changing reading texts and questions
-- Supporting export of student responses
-- Adding more detailed learning analytics
-- Allowing different reading passages and vocabulary sets to be selected by lesson
-- Improving long-term data storage using Google Sheets, Supabase, or another external database
