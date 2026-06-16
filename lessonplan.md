@@ -1,13 +1,28 @@
 # 50-Minute Lesson Plan
 
-## Lesson Overview
+## Learner Profile
 
-**Lesson Topic:** The Winds of Change  
-**Target Language:** English  
-**Learner Profile:** First-year high school students  
-**Class Setting:** Individual work and group discussion  
-**Lesson Length:** 50 minutes  
-**Main Tool:** English Reading Class App  
+The target learners are **first-year high school students** studying English as a foreign language. They are learning English in a Korean high school context where reading comprehension, vocabulary knowledge, and text analysis are important for both classroom learning and assessment.
+
+Students may have different levels of English proficiency. Some students may understand the passage quickly, while others may need more support with vocabulary, sentence structure, and reading strategies. Therefore, the lesson is designed to support both individual learning and fair access to key reading knowledge.
+
+---
+
+## Class Setting
+
+The lesson is designed for a classroom that combines **individual work and group discussion**.
+
+Students first work individually with the app to learn vocabulary and explore the reading passage. After individual exploration, the teacher opens class-wide highlights, and students use the shared results for pair or group discussion. The lesson ends with whole-class sharing and teacher feedback.
+
+The app can be used with student devices such as laptops, tablets, or school computers. The teacher can also display the full class shared view on a projector or large classroom screen.
+
+---
+
+## Lesson Topic
+
+**The Winds of Change**
+
+The lesson focuses on a reading passage about photographs that brought about major social changes. The passage includes the case of the burning Cuyahoga River and explains how a powerful image influenced environmental awareness and social action.
 
 ---
 
@@ -23,34 +38,11 @@ By the end of the lesson, students will be able to:
 
 ---
 
-## Lesson Rationale
+## Target Language
 
-This lesson is designed for a high school English reading class where students need both accurate comprehension and active engagement. In an exam-oriented reading context, it is important to provide fair access to key content knowledge. However, students also need opportunities to read actively, make decisions, ask questions, and discuss their interpretations.
+The target language is **English**.
 
-The customized app supports this balance. Students can first learn vocabulary as a class, save unknown words to their personal word list, explore the reading passage independently, compare whole-class highlights during group discussion, and then participate in final whole-class sharing. The app also helps the teacher make students’ reading processes visible through sentence-level tags, highlights, and comments.
-
----
-
-## Materials and Technology
-
-- English Reading Class App
-- Student devices such as laptops, tablets, or school computers
-- Projector or large classroom display
-- Lesson 4 reading passage: *The Winds of Change*
-- Vocabulary list from the passage
-- Reading questions embedded in the app
-
----
-
-## App Integration
-
-The app is integrated into the lesson in three main ways.
-
-First, the **Word** section is used for vocabulary learning before reading. The teacher presents key words from the passage through word cards. Students first see only the word and are given time to think about its meaning. Then the teacher flips the card so students can check the meaning and the English definition or example. After checking each word, students choose either **I Know It** or **Save to My Words**. Words saved to **My Words** become a personal review list for after-class study. Once students memorize or review a word, they can click **Remove** to delete it from their list.
-
-Second, the **Reading** section is used for active reading. Students read the passage sentence by sentence and tag each sentence according to categories such as main idea, evidence for questions, grammar/structure, or confusion. Their selections create color-coded highlights, and students can write comments next to sentences.
-
-Third, the **Teacher Settings** section allows the teacher to share class highlights. Before sharing, students only see their own tags and comments. After individual exploration, the teacher opens the full class highlights, and students use the shared results immediately for group discussion. This sequence supports both individual thinking and equitable access to important reading points before final whole-class sharing.
+Students use English to read the passage, understand vocabulary, identify important sentences, and answer reading questions. The lesson also supports English reading strategy development, including identifying main ideas, finding textual evidence, noticing grammar or sentence structure, and expressing questions or opinions about the text.
 
 ---
 
@@ -66,11 +58,9 @@ Third, the **Teacher Settings** section allows the teacher to share class highli
 | 40–48 min | Final whole-class sharing and teacher feedback | Leads whole-class discussion, clarifies key points, and provides feedback | Share group findings and revise understanding based on feedback | Full class shared view is displayed |
 | 48–50 min | Wrap-up and formative assessment | Summarizes key vocabulary, reading points, and learning outcomes | Answer quick review questions or reflect on what they learned | Teacher uses app responses and oral answers for formative assessment |
 
----
+### Detailed Procedure
 
-## Detailed Lesson Procedure
-
-### 1. Warm-up and Lesson Introduction (0–5 minutes)
+#### 1. Warm-up and Lesson Introduction (0–5 minutes)
 
 The teacher displays the home screen of the app and introduces the lesson topic, **The Winds of Change**. The teacher asks a brief question such as:
 
@@ -79,9 +69,7 @@ The teacher displays the home screen of the app and introduces the lesson topic,
 
 Students briefly think about the question and share one or two ideas. The teacher explains that the lesson will focus on photographs that influenced social awareness and change.
 
----
-
-### 2. Vocabulary Learning (5–15 minutes)
+#### 2. Vocabulary Learning (5–15 minutes)
 
 The teacher opens the **Word** section and starts the vocabulary card activity. Before students read the passage, the teacher presents key words from the text one by one. For each card, students first see only the target word and are given time to think about its possible meaning. This short thinking time encourages students to activate prior knowledge and become aware of which words they already know and which words they need to learn.
 
@@ -92,9 +80,7 @@ After students have had time to think, the teacher flips the card. Students then
 
 Words saved to **My Words** become each student’s personal vocabulary review list. Students can review these words after class. After they memorize or become confident with a saved word, they can click **Remove** to delete it from their personal list. In this way, the vocabulary activity supports both class-wide vocabulary preparation and individualized follow-up learning.
 
----
-
-### 3. Reading Strategy Guidance (15–20 minutes)
+#### 3. Reading Strategy Guidance (15–20 minutes)
 
 The teacher explains the sentence-level reading task. Students will read the passage and choose one tag for important sentences.
 
@@ -107,9 +93,7 @@ The tag categories are:
 
 The teacher emphasizes that students should not highlight randomly. They should choose tags based on their reading purpose and write a short reason, question, or opinion when needed.
 
----
-
-### 4. Individual Reading and Exploration (20–27 minutes)
+#### 4. Individual Reading and Exploration (20–27 minutes)
 
 Students open the **Reading** section of the app. They read the passage individually and work sentence by sentence.
 
@@ -121,9 +105,7 @@ For each important sentence, students:
 
 Before the teacher shares the class results, students can only see their own tags and highlights. This encourages individual thinking and prevents students from simply copying others’ responses.
 
----
-
-### 5. Class Highlights Opened and Group Discussion (27–40 minutes)
+#### 5. Class Highlights Opened and Group Discussion (27–40 minutes)
 
 After students complete their individual exploration, the teacher opens **Teacher Settings** and clicks **Share Class Highlights**. Students can now see the full class highlights and comments.
 
@@ -145,9 +127,7 @@ They also discuss questions such as:
 
 Students use both their own responses and the class-shared results as discussion evidence. This makes discussion more focused, text-based, and equitable. This stage also helps reduce comprehension gaps among students with different proficiency levels before final whole-class sharing.
 
----
-
-### 6. Final Whole-Class Sharing and Teacher Feedback (40–48 minutes)
+#### 6. Final Whole-Class Sharing and Teacher Feedback (40–48 minutes)
 
 The teacher displays the full class shared view on a large screen. Groups share their refined interpretations, and the teacher provides feedback by:
 
@@ -159,9 +139,7 @@ The teacher displays the full class shared view on a large screen. Groups share 
 
 Because the group discussion stage has already helped students compare individual and class-wide responses, this final sharing stage can focus more deeply on learning products, important reading points, and teacher feedback. This stage helps ensure that all students gain access to the key knowledge, even if their individual interpretations were incomplete.
 
----
-
-### 7. Wrap-up and Formative Assessment (48–50 minutes)
+#### 7. Wrap-up and Formative Assessment (48–50 minutes)
 
 The teacher summarizes the lesson by reviewing:
 
@@ -203,7 +181,19 @@ As a knowledge provider, the teacher clarifies important vocabulary, reading det
 
 ---
 
-## Feedback and Assessment
+## App Integration
+
+The app is integrated into the lesson in three main ways.
+
+First, the **Word** section is used for vocabulary learning before reading. The teacher presents key words from the passage through word cards. Students first see only the word and are given time to think about its meaning. Then the teacher flips the card so students can check the meaning and the English definition or example. After checking each word, students choose either **I Know It** or **Save to My Words**. Words saved to **My Words** become a personal review list for after-class study. Once students memorize or review a word, they can click **Remove** to delete it from their list.
+
+Second, the **Reading** section is used for active reading. Students read the passage sentence by sentence and tag each sentence according to categories such as main idea, evidence for questions, grammar/structure, or confusion. Their selections create color-coded highlights, and students can write comments next to sentences.
+
+Third, the **Teacher Settings** section allows the teacher to share class highlights. Before sharing, students only see their own tags and comments. After individual exploration, the teacher opens the full class highlights, and students use the shared results immediately for group discussion. This sequence supports both individual thinking and equitable access to important reading points before final whole-class sharing.
+
+---
+
+## Feedback or Assessment
 
 Assessment is mainly formative. The teacher checks students’ understanding through:
 
@@ -219,7 +209,7 @@ Feedback includes both **peer feedback** and **teacher feedback**. Peer feedback
 
 ---
 
-## Expected Learning Outcomes
+## Expected Learning Outcome
 
 By the end of the lesson, students are expected to:
 
@@ -232,14 +222,4 @@ By the end of the lesson, students are expected to:
 - Gain fair access to essential reading knowledge through shared class highlights and teacher feedback.
 - Develop a more active and exploratory attitude toward English reading.
 
----
-
-## Adaptive Learning Support
-
-The customized app supports adaptive learning in several ways.
-
-First, the **Save to My Words** function allows students to create an individualized vocabulary list. This helps students review the words they personally find difficult rather than studying all words in the same way. The **Remove** function also allows students to manage their own learning progress after they have memorized or reviewed a word.
-
-Second, the sentence-level tagging activity allows students to interact with the text according to their own comprehension needs. Some students may focus on main ideas, while others may mark evidence, grammar, or confusing sentences.
-
-Third, the teacher can share class highlights after students complete their individual work and use those highlights as a basis for group discussion. This helps students compare their own thinking with the class results, notice important reading points, and participate in discussion with more equal access to content knowledge. In this way, the app supports both individual learning and fair knowledge delivery.
+The customized app supports adaptive learning by allowing students to save difficult vocabulary to a personal word list and by helping them engage with the reading passage according to their own comprehension needs. It also supports equitable learning because the teacher can share class-wide highlights before group discussion, allowing all students to access important reading points and participate more meaningfully.
