@@ -1,10 +1,12 @@
-# English Reading Class App
+# English Reading Class App [![Open App](https://img.shields.io/badge/Open%20App-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://myproject-jm.streamlit.app/)
 
 ## Project Description
 
 **English Reading Class App** is a customized Streamlit-based learning application designed for a first-year high school English reading class. The app supports vocabulary learning, active reading, sentence-level highlighting, individual reflection, group discussion, and whole-class sharing. It was developed for a lesson on **Lesson 4: The Winds of Change**, which focuses on how powerful photographs can influence public awareness and bring about social change.
 
 The app is designed to support a classroom model in which students first learn key vocabulary, explore the reading passage individually, open and discuss class-wide highlights in groups, and finally share refined interpretations with teacher feedback.
+
+**Live App:** [https://myproject-jm.streamlit.app/](https://myproject-jm.streamlit.app/)
 
 ---
 
@@ -157,6 +159,10 @@ Future improvements could include:
 ---
 
 ## Running the App
+
+Open the deployed app here:
+
+[https://myproject-jm.streamlit.app/](https://myproject-jm.streamlit.app/)
 
 To run the app locally:
 
