@@ -1,26 +1,20 @@
 # English Reading Class App [![Open App](https://img.shields.io/badge/Open%20App-Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://myproject-jm.streamlit.app/)
 
-## Project Description
-
-**English Reading Class App** is a customized Streamlit-based learning application designed for a first-year high school English reading class. The app supports vocabulary learning, active reading, sentence-level highlighting, individual reflection, group discussion, and whole-class sharing. It was developed for a lesson on **Lesson 4: The Winds of Change**, which focuses on how powerful photographs can influence public awareness and bring about social change.
-
-The app is designed to support a classroom model in which students first learn key vocabulary, explore the reading passage individually, open and discuss class-wide highlights in groups, and finally share refined interpretations with teacher feedback.
-
 **Live App:** [https://myproject-jm.streamlit.app/](https://myproject-jm.streamlit.app/)
 
 ---
 
 ## Teaching Context
 
-### Learners
+### Who are your learners?
 
-The target learners are **first-year high school students** studying English as a foreign language. They are preparing for reading-focused English classes in a Korean high school context, where reading comprehension, vocabulary knowledge, and text analysis are important parts of classroom learning and assessment.
+The target learners are **first-year high school students** studying English as a foreign language. They are learning English in a Korean high school context, where reading comprehension, vocabulary knowledge, and text analysis are important parts of classroom learning and assessment.
 
-### Classroom Environment
+### What is your classroom environment?
 
-The classroom is mainly organized around **English reading instruction**. Students often work individually first and then move into pair or group discussion. The lesson can be implemented in either individual or group settings depending on the teacher’s instructional goals.
+The classroom is mainly organized around **English reading instruction**. Students usually engage in individual reading activities first and then move into pair or group discussion. Since high school English classes are often reading-focused and exam-oriented, the lesson needs to support both accurate comprehension and active learner participation.
 
-### Learner Challenges
+### What challenges do learners have?
 
 Students may have limited opportunities to engage in active reading. In a reading-focused and exam-oriented classroom, lessons can easily become teacher-centered, with students passively receiving explanations. In addition, differences in English proficiency and learning conditions can lead to gaps in comprehension, vocabulary learning, and access to key content knowledge. Therefore, the lesson needs to support both learner-centered exploration and fair delivery of essential knowledge.
 
@@ -28,15 +22,29 @@ Students may have limited opportunities to engage in active reading. In a readin
 
 ## Lesson Purpose
 
+### What does this lesson teach?
+
 This lesson teaches **vocabulary and reading comprehension** through the topic **“The Winds of Change.”** Students read a passage about photographs that contributed to major social changes, including the image of the burning Cuyahoga River and its impact on environmental awareness.
 
+Through the lesson, students learn key vocabulary from the passage, identify main ideas and supporting details, notice important grammar or sentence structures, and use reading strategies to explore the text sentence by sentence.
+
+### Why is this lesson meaningful?
+
 The lesson is meaningful because it allows students to actively investigate the passage while still ensuring that important vocabulary, main ideas, details, and grammar points are shared fairly across the class. Students are not only asked to understand the passage but also to mark important sentences, explain their reasoning, compare ideas with others, and participate in a shared class interpretation.
+
+This structure helps balance student-centered exploration with equitable knowledge delivery, which is especially important in a high school reading class where students’ English proficiency levels may vary.
 
 ---
 
 ## App Purpose
 
+### Why did you build this app?
+
 I built this app to support a high school English reading class where reading takes up a large portion of instruction and assessment. In a college entrance exam-oriented context, students need to understand reading passages accurately, but the classroom should not rely only on one-way teacher explanation. At the same time, it is important that differences in students’ English proficiency do not prevent them from accessing key content.
+
+The app was designed to support a classroom model in which students first learn key vocabulary, explore the reading passage individually, open and discuss class-wide highlights in groups, and finally share refined interpretations with teacher feedback.
+
+### What learning need does it address?
 
 The app addresses the need for:
 
@@ -53,26 +61,15 @@ The app helps students think first on their own, participate in discussion, and 
 
 ## App Design
 
-The app has three main sections:
+### How does it work?
 
-### 1. Home
+The app has three main sections: **Home**, **Word**, and **Reading**.
 
-The home screen introduces the class with the title **Daea High School English Reading Class** and a simple visual design. It functions as the entry point for the lesson.
+The **Home** screen introduces the class with the title **Daea High School English Reading Class** and functions as the entry point for the lesson.
 
-### 2. Word
+The **Word** section supports class vocabulary practice and individualized vocabulary review. Before reading the main passage, the teacher presents key vocabulary from the text through teacher-controlled word cards. Students first see only the target word and are given time to think about its meaning. When the teacher flips the card, students can check the Korean meaning and the English definition or example information. After checking the answer, each student responds individually by selecting either **I Know It** or **Save to My Words**.
 
-The **Word** section supports class vocabulary practice and individualized vocabulary review.
-
-Before reading the main passage, the teacher presents key vocabulary from the text through teacher-controlled word cards. Students first see only the target word and are given time to think about its meaning. This short thinking time encourages students to activate prior knowledge and notice what they already know or do not know.
-
-When the teacher flips the card, students can check the Korean meaning and the English definition or example information. After checking the answer, each student responds individually by selecting one of two buttons:
-
-- **I Know It**
-- **Save to My Words**
-
-If students feel that a word is difficult or unfamiliar, they can save it to **My Words**. These saved words become a personal vocabulary review list that students can revisit after class. After memorizing or reviewing a saved word, students can remove it from their personal list by clicking **Remove**. In this way, the app supports vocabulary learning before, during, and after the lesson.
-
-### 3. Reading
+If students feel that a word is difficult or unfamiliar, they can save it to **My Words**. These saved words become a personal vocabulary review list that students can revisit after class. After memorizing or reviewing a saved word, students can remove it from their personal list by clicking **Remove**.
 
 The **Reading** section presents the reading passage and questions directly from the code. Students read the passage sentence by sentence and select a tag for each sentence. The tag categories include:
 
@@ -85,9 +82,7 @@ When students choose a tag, the sentence is highlighted in a different color acc
 
 The Reading section follows a staged process. First, students explore the text individually by tagging and highlighting sentences. Then, the teacher opens the full class highlights, and students use those shared results during group discussion. In groups, they compare their own choices with class-wide patterns, discuss differences, and refine their interpretations. Finally, the class shares key findings and receives teacher feedback.
 
----
-
-## Data and Content
+### What data or content does it use?
 
 The app currently uses:
 
@@ -98,9 +93,19 @@ The app currently uses:
 
 The app stores classroom activity data using a local SQLite database.
 
+### How do learners interact with it?
+
+Learners interact with the app in several ways.
+
+In the **Word** section, students view vocabulary cards, think about meanings, check answers after the teacher flips the card, and choose either **I Know It** or **Save to My Words**. Students can later review saved words in their personal word list and remove words after memorizing them.
+
+In the **Reading** section, students read each sentence, select a tag, create color-coded highlights, and write short comments or questions. Before class results are shared, students can see only their own tags and highlights. After the teacher shares class highlights, students can compare their responses with the whole class and use the shared results for group discussion.
+
 ---
 
 ## Classroom Use
+
+### How is the app used in the lesson?
 
 The app is used in the lesson in the following sequence:
 
@@ -112,27 +117,17 @@ The app is used in the lesson in the following sequence:
 6. Students refine their interpretations through group discussion.
 7. The class shares final learning products and receives teacher feedback.
 
-This process improves the lesson by making students’ reading processes visible. It also helps the teacher identify which sentences students find important, confusing, or useful as evidence.
+### What does it improve?
 
----
+The app improves the lesson by making students’ reading processes visible. It helps the teacher identify which sentences students find important, confusing, or useful as evidence. It also gives students more opportunities to engage in active reading rather than simply listening to teacher explanations.
 
-## How the App Supports Adaptive Learning
-
-The app supports adaptive learning in two main ways.
-
-First, students can save unknown or difficult vocabulary to **My Words**, which creates a personalized vocabulary review list. Students do not need to study the same words in the same way; instead, they can focus on words they personally need to review. After reviewing and memorizing the words, students can remove them from their list, which gives them a simple way to manage their own vocabulary learning progress.
-
-Second, the Reading section allows students to mark sentences based on their own understanding. Students can identify main ideas, supporting evidence, grammar points, and confusing sentences. This supports active reading and allows students with different proficiency levels to participate meaningfully. When the teacher shares the class results, all learners can access important knowledge and compare their interpretations with others.
-
----
-
-## Teacher Role
-
-The teacher acts as both a **facilitator** and a **knowledge provider**. The teacher controls vocabulary cards, monitors student responses, supports group discussion, shares class highlights, and gives feedback on key reading points. The app helps the teacher balance student-centered exploration with clear instruction.
+The **Save to My Words** function supports adaptive vocabulary learning because students can focus on the words they personally need to review. The class highlight sharing function also supports equitable learning because students can access important reading points before group discussion and final whole-class feedback.
 
 ---
 
 ## Limitations
+
+### What are current limitations?
 
 The current version has several limitations:
 
@@ -146,6 +141,8 @@ The current version has several limitations:
 
 ## Future Development
 
+### What could be improved?
+
 Future improvements could include:
 
 - Improving mobile compatibility for the Reading section
@@ -155,27 +152,3 @@ Future improvements could include:
 - Adding more detailed learning analytics
 - Allowing different reading passages and vocabulary sets to be selected by lesson
 - Improving long-term data storage using Google Sheets, Supabase, or another external database
-
----
-
-## Running the App
-
-Open the deployed app here:
-
-[https://myproject-jm.streamlit.app/](https://myproject-jm.streamlit.app/)
-
-To run the app locally:
-
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-```
-
-Main files:
-
-- `app.py`: Main app structure and navigation
-- `flip_recall.py`: Vocabulary learning section
-- `text_spotlight.py`: Reading, highlighting, tagging, and sharing section
-- `db.py`: Database functions
-- `requirements.txt`: Required packages
-- `home_student.png`: Home screen image
